@@ -2,6 +2,7 @@ package com.wow.timewalkers;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 
 // @SpringBootApplication is a convenience annotation that combines:
 //   @Configuration      - marks this class as a source of bean definitions
@@ -10,7 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 //                              because spring-data-jpa is present)
 //   @ComponentScan      - scans this package and all sub-packages for Spring-managed
 //                         components (@Service, @Repository, @RestController, etc.)
-@SpringBootApplication
+@SpringBootApplication(exclude = {UserDetailsServiceAutoConfiguration.class})
 public class TimewalkersApplication {
 
     public static void main(String[] args) {
