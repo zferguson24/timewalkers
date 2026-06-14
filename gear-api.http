@@ -1,0 +1,351 @@
+### ==========================================
+### 1. Get all armor pieces
+### ==========================================
+
+GET http://localhost:8080/api/gear/armor
+Accept: application/json
+
+###
+
+### ==========================================
+### 2. Get all weapons
+### ==========================================
+
+GET http://localhost:8080/api/gear/weapons
+Accept: application/json
+
+###
+
+### ==========================================
+### 3. Search armor by name (partial match)
+### ==========================================
+
+GET http://localhost:8080/api/gear/armor/search?name=mugthol
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/gear/armor/search?name=helm
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/gear/armor/search?name=sentinel
+Accept: application/json
+
+###
+
+# Expects: empty array
+GET http://localhost:8080/api/gear/armor/search?name=nonexistent
+Accept: application/json
+
+###
+
+# Expects: 400 Bad Request
+GET http://localhost:8080/api/gear/armor/search
+Accept: application/json
+
+###
+
+### ==========================================
+### 4. Search weapons by name (partial match)
+### ==========================================
+
+GET http://localhost:8080/api/gear/weapons/search?name=lightforged
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/gear/weapons/search?name=blade
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/gear/weapons/search?name=staff
+Accept: application/json
+
+###
+
+# Expects: empty array
+GET http://localhost:8080/api/gear/weapons/search?name=nonexistent
+Accept: application/json
+
+###
+
+# Expects: 400 Bad Request
+GET http://localhost:8080/api/gear/weapons/search
+Accept: application/json
+
+###
+
+### ==========================================
+### 5. Get all gear by expansion
+### ==========================================
+
+GET http://localhost:8080/api/gear/expansion?name=Classic
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/gear/expansion?name=Burning Crusade
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/gear/expansion?name=Wrath of the Lich King
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/gear/expansion?name=Cataclysm
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/gear/expansion?name=Mists of Pandaria
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/gear/expansion?name=Warlords of Draenor
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/gear/expansion?name=Legion
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/gear/expansion?name=Battle for Azeroth
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/gear/expansion?name=Shadowlands
+Accept: application/json
+
+###
+
+# Expects: both lists empty
+GET http://localhost:8080/api/gear/expansion?name=Dragonflight
+Accept: application/json
+
+###
+
+# Expects: 400 Bad Request
+GET http://localhost:8080/api/gear/expansion
+Accept: application/json
+
+###
+
+### ==========================================
+### 6. Get armor by type
+### ==========================================
+
+GET http://localhost:8080/api/gear/armor/type?name=Plate
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/gear/armor/type?name=Mail
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/gear/armor/type?name=Leather
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/gear/armor/type?name=Cloth
+Accept: application/json
+
+###
+
+# Returns necks, cloaks, rings, trinkets
+GET http://localhost:8080/api/gear/armor/type?name=Agnostic
+Accept: application/json
+
+###
+
+# Expects: 400 Bad Request
+GET http://localhost:8080/api/gear/armor/type
+Accept: application/json
+
+###
+
+### ==========================================
+### 7. Create a character
+### ==========================================
+
+POST http://localhost:8080/api/characters
+Content-Type: application/json
+
+{
+  "name": "Jaraxxus",
+  "race": "NIGHT_ELF",
+  "characterClass": "DEMON_HUNTER"
+}
+
+###
+
+# Expects: 409 Conflict — name already taken
+POST http://localhost:8080/api/characters
+Content-Type: application/json
+
+{
+  "name": "jaraxxus",
+  "race": "ORC",
+  "characterClass": "WARRIOR"
+}
+
+###
+
+### ==========================================
+### 8. Get a character by name (case-insensitive)
+### ==========================================
+
+GET http://localhost:8080/api/characters/Jaraxxus
+Accept: application/json
+
+###
+
+GET http://localhost:8080/api/characters/jaraxxus
+Accept: application/json
+
+###
+
+# Expects: 404 Not Found
+GET http://localhost:8080/api/characters/nonexistent
+Accept: application/json
+
+###
+
+### ==========================================
+### 9. Equip gear — success cases
+### ==========================================
+
+# Equip a full set of leather armor across all armor slots
+PATCH http://localhost:8080/api/characters/Jaraxxus/gear
+Content-Type: application/json
+
+{
+  "slots": [
+    {"slot": "HEAD",      "itemName": "Mask of the Deceiver"},
+    {"slot": "SHOULDERS", "itemName": "Thorignir Spaulders"},
+    {"slot": "CHEST",     "itemName": "Thorignir Heartguard"},
+    {"slot": "WRIST",     "itemName": "Unearthed Bands"},
+    {"slot": "HANDS",     "itemName": "Cat Burglar's Grips"},
+    {"slot": "WAIST",     "itemName": "Belt of the Silent Path"},
+    {"slot": "LEGS",      "itemName": "Thorignir Breeches"},
+    {"slot": "FEET",      "itemName": "Feet of the Lynx"}
+  ]
+}
+
+###
+
+# Equip dual-wield DH weapons (Warglaive main + Fist Weapon off-hand)
+PATCH http://localhost:8080/api/characters/Jaraxxus/gear
+Content-Type: application/json
+
+{
+  "slots": [
+    {"slot": "MAIN_HAND", "itemName": "Warglaives of Devotion"},
+    {"slot": "OFF_HAND",  "itemName": "Lefty's Brass Knuckle"}
+  ]
+}
+
+###
+
+# Partial success — valid item + item not found in DB; equipped list and notFound list both populated
+PATCH http://localhost:8080/api/characters/Jaraxxus/gear
+Content-Type: application/json
+
+{
+  "slots": [
+    {"slot": "HEAD",      "itemName": "Mask of the Deceiver"},
+    {"slot": "SHOULDERS", "itemName": "This Item Does Not Exist"}
+  ]
+}
+
+###
+
+### ==========================================
+### 10. Equip gear — rejection cases (400)
+### ==========================================
+
+# Expects: 400 — Demon Hunters cannot wear Plate armor
+PATCH http://localhost:8080/api/characters/Jaraxxus/gear
+Content-Type: application/json
+
+{
+  "slots": [
+    {"slot": "HEAD", "itemName": "Mugthol's Helm"}
+  ]
+}
+
+###
+
+# Expects: 400 — Demon Hunters cannot use Staves
+PATCH http://localhost:8080/api/characters/Jaraxxus/gear
+Content-Type: application/json
+
+{
+  "slots": [
+    {"slot": "MAIN_HAND", "itemName": "Warpcaster's Staff"}
+  ]
+}
+
+###
+
+# Expects: 400 — Demon Hunters cannot use Shields in off-hand
+PATCH http://localhost:8080/api/characters/Jaraxxus/gear
+Content-Type: application/json
+
+{
+  "slots": [
+    {"slot": "OFF_HAND", "itemName": "Mazthoril Honor Shield"}
+  ]
+}
+
+###
+
+# Expects: 400 — Cannot request both a 2H main-hand and an off-hand in the same request
+# (Applicable to classes that use 2H weapons, e.g. a Warrior equipping a 2H Sword + an off-hand)
+# Shown here as a general validation example; Demon Hunters have no 2H weapons.
+PATCH http://localhost:8080/api/characters/Jaraxxus/gear
+Content-Type: application/json
+
+{
+  "slots": [
+    {"slot": "MAIN_HAND", "itemName": "Lightforged Blade"},
+    {"slot": "OFF_HAND",  "itemName": "Lefty's Brass Knuckle"}
+  ]
+}
+
+###
+
+### ==========================================
+### 11. Unequip specific slots
+### ==========================================
+
+# Unequip both weapon slots
+DELETE http://localhost:8080/api/characters/Jaraxxus/gear
+Content-Type: application/json
+
+{
+  "slots": ["MAIN_HAND", "OFF_HAND"]
+}
+
+###
+
+# Unequip a single armor slot
+DELETE http://localhost:8080/api/characters/Jaraxxus/gear
+Content-Type: application/json
+
+{
+  "slots": ["HEAD"]
+}
+
+###

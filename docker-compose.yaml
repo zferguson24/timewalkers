@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: timewalkers-db
+    environment:
+      POSTGRES_DB: timewalkersdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - timewalkers_pgdata:/var/lib/postgresql
+
+volumes:
+  timewalkers_pgdata:
