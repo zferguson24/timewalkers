@@ -52,7 +52,7 @@ class GearControllerTest {
     @DisplayName("GET /api/gear/armor returns 200 with armor list")
     void getAllArmorReturns200() throws Exception {
         ArmorPieceDTO dto = new ArmorPieceDTO("Leather", "Helm", "Demon's Skull",
-                "The Burning Crusade", "Agility", "Haste", 50, null, null);
+                "The Burning Crusade", "Agility", "Haste", 50, null, null, null);
         when(gearService.getAllArmorPieces()).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/gear/armor"))
@@ -79,7 +79,7 @@ class GearControllerTest {
     @DisplayName("GET /api/gear/weapons returns 200 with weapon list")
     void getAllWeaponsReturns200() throws Exception {
         WeaponDTO dto = new WeaponDTO("1H", "Agility", "Warglaive", "Warglaive of Azzinoth",
-                "The Burning Crusade", "Agility", "Haste", 0, null, null);
+                "The Burning Crusade", "Agility", "Haste", 0, null, null, null);
         when(gearService.getAllWeapons()).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/gear/weapons"))
@@ -106,7 +106,7 @@ class GearControllerTest {
     @DisplayName("GET /api/gear/armor/search?name= returns 200 with matching results")
     void searchArmorReturns200() throws Exception {
         ArmorPieceDTO dto = new ArmorPieceDTO("Plate", "Helm", "Battlegear Helm",
-                "Classic", "Strength", null, 100, null, null);
+                "Classic", "Strength", null, 100, null, null, null);
         when(gearService.getArmorPiecesByName("Battlegear")).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/gear/armor/search").param("name", "Battlegear"))
@@ -131,7 +131,7 @@ class GearControllerTest {
     @DisplayName("GET /api/gear/weapons/search?name= returns 200 with matching results")
     void searchWeaponsReturns200() throws Exception {
         WeaponDTO dto = new WeaponDTO("1H", "Agility", "Sword", "Quel'Serrar",
-                "Classic", "Agility", null, 0, null, null);
+                "Classic", "Agility", null, 0, null, null, null);
         when(gearService.getWeaponsByName("Quel")).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/gear/weapons/search").param("name", "Quel"))
@@ -178,7 +178,7 @@ class GearControllerTest {
     @DisplayName("GET /api/gear/armor/type?name= returns 200 with filtered armor")
     void getArmorByTypeReturns200() throws Exception {
         ArmorPieceDTO dto = new ArmorPieceDTO("Plate", "Helm", "Plate Helm",
-                "Classic", "Strength", null, 0, null, null);
+                "Classic", "Strength", null, 0, null, null, null);
         when(gearService.getArmorPiecesByType("Plate")).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/gear/armor/type").param("name", "Plate"))

@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS armor_pieces (
     secondary_stat VARCHAR(50),
     cost           INTEGER      NOT NULL,
     notes          TEXT,
-    wowhead_url    VARCHAR(300)
+    wowhead_url    VARCHAR(300),
+    icon_url       VARCHAR(300)
 );
 
 -- Weapons table (1H, 2H, Offhand/Shield, Ranged)
@@ -24,7 +25,8 @@ CREATE TABLE IF NOT EXISTS weapons (
     secondary_stat VARCHAR(50),
     cost           INTEGER      NOT NULL,
     notes          TEXT,
-    wowhead_url    VARCHAR(300)
+    wowhead_url    VARCHAR(300),
+    icon_url       VARCHAR(300)
 );
 
 CREATE INDEX IF NOT EXISTS idx_armor_expansion  ON armor_pieces(expansion);
