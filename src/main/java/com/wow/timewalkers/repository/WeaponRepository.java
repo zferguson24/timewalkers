@@ -18,6 +18,12 @@ public interface WeaponRepository extends JpaRepository<Weapon, Long> {
     // Partial match — used by the search endpoint
     List<Weapon> findByNameContainingIgnoreCase(String name);
 
-    // Exact match on expansion — used by the expansion gear endpoint
-    List<Weapon> findByExpansionIgnoreCase(String expansion);
+    // Partial match on expansion — used by the expansion gear endpoint
+    List<Weapon> findByExpansionContainingIgnoreCase(String expansion);
+
+    // Partial match on weapon_type — used by the weapon type search endpoint
+    List<Weapon> findByWeaponTypeContainingIgnoreCase(String weaponType);
+
+    // findByWeaponSlotContainingIgnoreCase -> WHERE LOWER(weapon_slot) LIKE LOWER('%?%')
+    List<Weapon> findByWeaponSlotContainingIgnoreCase(String weaponSlot);
 }
