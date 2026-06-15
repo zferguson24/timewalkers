@@ -12,6 +12,7 @@ import com.wow.timewalkers.enums.WowRace;
 import com.wow.timewalkers.exception.CharacterNameConflictException;
 import com.wow.timewalkers.exception.CharacterNotFoundException;
 import com.wow.timewalkers.exception.GearValidationException;
+import com.wow.timewalkers.exception.InvalidRaceClassCombinationException;
 import com.wow.timewalkers.mapper.CharacterMapper;
 import com.wow.timewalkers.mapper.GearMapper;
 import com.wow.timewalkers.repository.ArmorPieceRepository;
@@ -51,10 +52,11 @@ class CharacterServiceTest {
         GearMapper gearMapper = new GearMapper();
         CharacterMapper characterMapper = new CharacterMapper(gearMapper);
         GearValidator gearValidator = new GearValidator();
+        CharacterValidator characterValidator = new CharacterValidator();
         characterService = new CharacterService(
                 characterRepository, equipmentRepository,
                 armorPieceRepository, weaponRepository,
-                characterMapper, gearValidator);
+                characterMapper, gearValidator, characterValidator);
     }
 
     // -----------------------------------------------------------------------
@@ -105,6 +107,42 @@ class CharacterServiceTest {
     }
 
     // -----------------------------------------------------------------------
+    // getAllCharacters
+    // -----------------------------------------------------------------------
+
+    @Nested
+    @DisplayName("getAllCharacters")
+    class GetAllCharacters {
+
+        @Test
+        @DisplayName("Returns a summary DTO for each character in the repository")
+        void returnsAllCharacters() {
+            WowCharacter c1 = character(WowClass.DEMON_HUNTER);
+            WowCharacter c2 = character(WowClass.WARRIOR);
+            c2.setName("TESTCHAR");
+            c2.setRace(WowRace.ORC);
+            when(characterRepository.findAll()).thenReturn(List.of(c1, c2));
+
+            List<CharacterSummaryDTO> result = characterService.getAllCharacters();
+
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).name()).isEqualTo("JARAXXUS");
+            assertThat(result.get(0).characterClass()).isEqualTo(WowClass.DEMON_HUNTER);
+            assertThat(result.get(0).race()).isEqualTo(WowRace.NIGHT_ELF);
+            assertThat(result.get(1).name()).isEqualTo("TESTCHAR");
+            assertThat(result.get(1).race()).isEqualTo(WowRace.ORC);
+        }
+
+        @Test
+        @DisplayName("Returns empty list when no characters exist")
+        void returnsEmptyList() {
+            when(characterRepository.findAll()).thenReturn(List.of());
+
+            assertThat(characterService.getAllCharacters()).isEmpty();
+        }
+    }
+
+    // -----------------------------------------------------------------------
     // createCharacter
     // -----------------------------------------------------------------------
 
@@ -152,6 +190,31 @@ class CharacterServiceTest {
                     .hasMessageContaining("JARAXXUS");
 
             verify(characterRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Throws InvalidRaceClassCombinationException for invalid race/class combo")
+        void throwsInvalidRaceClassForBadCombo() {
+            // Human cannot be an Evoker
+            assertThatThrownBy(() -> characterService.createCharacter(
+                    new CreateCharacterRequest("jaraxxus", WowRace.HUMAN, WowClass.EVOKER)))
+                    .isInstanceOf(InvalidRaceClassCombinationException.class)
+                    .hasMessageContaining("Human")
+                    .hasMessageContaining("Evoker");
+
+            verify(characterRepository, never()).existsByName(any());
+            verify(characterRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Race/class validation runs before name conflict check")
+        void raceClassValidationRunsBeforeNameCheck() {
+            // Even if the name existed, we'd see the race/class error first
+            assertThatThrownBy(() -> characterService.createCharacter(
+                    new CreateCharacterRequest("jaraxxus", WowRace.DRACTHYR, WowClass.PALADIN)))
+                    .isInstanceOf(InvalidRaceClassCombinationException.class);
+
+            verify(characterRepository, never()).existsByName(any());
         }
     }
 

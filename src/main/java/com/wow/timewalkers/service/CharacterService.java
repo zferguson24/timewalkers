@@ -37,22 +37,26 @@ public class CharacterService {
     private final WeaponRepository weaponRepository;
     private final CharacterMapper characterMapper;
     private final GearValidator gearValidator;
+    private final CharacterValidator characterValidator;
 
     public CharacterService(CharacterRepository characterRepository,
                             CharacterEquipmentRepository equipmentRepository,
                             ArmorPieceRepository armorPieceRepository,
                             WeaponRepository weaponRepository,
                             CharacterMapper characterMapper,
-                            GearValidator gearValidator) {
+                            GearValidator gearValidator,
+                            CharacterValidator characterValidator) {
         this.characterRepository = characterRepository;
         this.equipmentRepository = equipmentRepository;
         this.armorPieceRepository = armorPieceRepository;
         this.weaponRepository = weaponRepository;
         this.characterMapper = characterMapper;
         this.gearValidator = gearValidator;
+        this.characterValidator = characterValidator;
     }
 
     public CharacterDTO createCharacter(CreateCharacterRequest request) {
+        characterValidator.validateRaceClassCombination(request.race(), request.characterClass());
         // Normalize name to uppercase before any DB interaction
         String name = request.name().toUpperCase();
         if (characterRepository.existsByName(name)) {
@@ -66,6 +70,13 @@ public class CharacterService {
         // It returns the managed entity with its generated id populated.
         characterRepository.save(character);
         return characterMapper.toCharacterDTO(character, List.of());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CharacterSummaryDTO> getAllCharacters() {
+        return characterRepository.findAll().stream()
+                .map(c -> new CharacterSummaryDTO(c.getName(), c.getRace(), c.getCharacterClass()))
+                .toList();
     }
 
     // readOnly = true is a performance hint to the JPA provider — Hibernate can skip

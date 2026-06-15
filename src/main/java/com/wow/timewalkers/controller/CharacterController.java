@@ -5,6 +5,8 @@ import com.wow.timewalkers.service.CharacterService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/characters")
 public class CharacterController {
@@ -13,6 +15,12 @@ public class CharacterController {
 
     public CharacterController(CharacterService characterService) {
         this.characterService = characterService;
+    }
+
+    // GET /api/characters — list all characters (name, race, class only)
+    @GetMapping
+    public ResponseEntity<List<CharacterSummaryDTO>> getAllCharacters() {
+        return ResponseEntity.ok(characterService.getAllCharacters());
     }
 
     // @PostMapping handles HTTP POST — used for resource creation.

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+
 // @RestControllerAdvice combines @ControllerAdvice (applies globally to all controllers)
 // and @ResponseBody (automatically serializes return values to JSON).
 // This is the standard Spring MVC pattern for centralized exception handling —
@@ -36,5 +37,11 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
         body.put("rejected", ex.getRejections());
         return ResponseEntity.status(400).body(body);
+    }
+
+    // 400 Bad Request — invalid race/class combination on character creation
+    @ExceptionHandler(InvalidRaceClassCombinationException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidRaceClass(InvalidRaceClassCombinationException ex) {
+        return ResponseEntity.status(400).body(Map.of("message", ex.getMessage()));
     }
 }
