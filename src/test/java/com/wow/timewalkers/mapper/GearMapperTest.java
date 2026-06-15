@@ -33,6 +33,7 @@ class GearMapperTest {
         entity.setCost(200);
         entity.setNotes("From Tier 7");
         entity.setWowheadUrl("https://www.wowhead.com/item=12345");
+        entity.setIconUrl("https://wow.zamimg.com/images/wow/icons/large/inv_helmet_01.jpg");
 
         ArmorPieceDTO dto = mapper.toArmorPieceDTO(entity);
 
@@ -45,6 +46,7 @@ class GearMapperTest {
         assertThat(dto.cost()).isEqualTo(200);
         assertThat(dto.notes()).isEqualTo("From Tier 7");
         assertThat(dto.wowheadUrl()).isEqualTo("https://www.wowhead.com/item=12345");
+        assertThat(dto.iconUrl()).isEqualTo("https://wow.zamimg.com/images/wow/icons/large/inv_helmet_01.jpg");
     }
 
     @Test
@@ -64,6 +66,7 @@ class GearMapperTest {
         assertThat(dto.secondaryStat()).isNull();
         assertThat(dto.notes()).isNull();
         assertThat(dto.wowheadUrl()).isNull();
+        assertThat(dto.iconUrl()).isNull();
     }
 
     @Test
@@ -80,6 +83,7 @@ class GearMapperTest {
         entity.setCost(0);
         entity.setNotes("Main Hand only");
         entity.setWowheadUrl("https://www.wowhead.com/item=32837");
+        entity.setIconUrl("https://wow.zamimg.com/images/wow/icons/large/inv_sword_39.jpg");
 
         WeaponDTO dto = mapper.toWeaponDTO(entity);
 
@@ -93,6 +97,7 @@ class GearMapperTest {
         assertThat(dto.cost()).isEqualTo(0);
         assertThat(dto.notes()).isEqualTo("Main Hand only");
         assertThat(dto.wowheadUrl()).isEqualTo("https://www.wowhead.com/item=32837");
+        assertThat(dto.iconUrl()).isEqualTo("https://wow.zamimg.com/images/wow/icons/large/inv_sword_39.jpg");
     }
 
     @Test
@@ -113,5 +118,6 @@ class GearMapperTest {
         assertThat(dto.secondaryStat()).isNull();
         assertThat(dto.notes()).isNull();
         assertThat(dto.wowheadUrl()).isNull();
+        assertThat(dto.iconUrl()).isNull();
     }
 }

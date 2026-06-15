@@ -8,6 +8,7 @@ import com.wow.timewalkers.exception.CharacterNameConflictException;
 import com.wow.timewalkers.exception.CharacterNotFoundException;
 import com.wow.timewalkers.exception.GearValidationException;
 import com.wow.timewalkers.exception.GlobalExceptionHandler;
+import com.wow.timewalkers.exception.InvalidRaceClassCombinationException;
 import com.wow.timewalkers.service.CharacterService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -61,6 +62,33 @@ class CharacterControllerTest {
     }
 
     // -----------------------------------------------------------------------
+    // GET /api/characters
+    // -----------------------------------------------------------------------
+
+    @Test
+    @DisplayName("GET /api/characters returns 200 with list of character summaries")
+    void getAllCharactersReturns200() throws Exception {
+        CharacterSummaryDTO summary = new CharacterSummaryDTO("JARAXXUS", WowRace.NIGHT_ELF, WowClass.DEMON_HUNTER);
+        when(characterService.getAllCharacters()).thenReturn(List.of(summary));
+
+        mockMvc.perform(get("/api/characters"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("JARAXXUS"))
+                .andExpect(jsonPath("$[0].race").value("NIGHT_ELF"))
+                .andExpect(jsonPath("$[0].characterClass").value("DEMON_HUNTER"));
+    }
+
+    @Test
+    @DisplayName("GET /api/characters returns 200 with empty array when no characters exist")
+    void getAllCharactersReturnsEmptyList() throws Exception {
+        when(characterService.getAllCharacters()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/characters"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+    }
+
+    // -----------------------------------------------------------------------
     // POST /api/characters
     // -----------------------------------------------------------------------
 
@@ -102,6 +130,25 @@ class CharacterControllerTest {
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("A character named 'JARAXXUS' already exists"));
+    }
+
+    @Test
+    @DisplayName("POST /api/characters returns 400 when race/class combination is invalid")
+    void createCharacterReturns400OnInvalidRaceClass() throws Exception {
+        when(characterService.createCharacter(any()))
+                .thenThrow(new InvalidRaceClassCombinationException("Human cannot be a Evoker"));
+
+        mockMvc.perform(post("/api/characters")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "jaraxxus",
+                                  "race": "HUMAN",
+                                  "characterClass": "EVOKER"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Human cannot be a Evoker"));
     }
 
     // -----------------------------------------------------------------------

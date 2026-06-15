@@ -27,9 +27,12 @@ public interface ArmorPieceRepository extends JpaRepository<ArmorPiece, Long> {
     // Used for the partial-match search endpoints.
     List<ArmorPiece> findByNameContainingIgnoreCase(String name);
 
-    // findByExpansionIgnoreCase -> WHERE LOWER(expansion) = LOWER(?)
-    List<ArmorPiece> findByExpansionIgnoreCase(String expansion);
+    // findByExpansionContainingIgnoreCase -> WHERE LOWER(expansion) LIKE LOWER('%?%')
+    List<ArmorPiece> findByExpansionContainingIgnoreCase(String expansion);
 
-    // findByArmorTypeIgnoreCase -> WHERE LOWER(armor_type) = LOWER(?)
-    List<ArmorPiece> findByArmorTypeIgnoreCase(String armorType);
+    // findByArmorTypeContainingIgnoreCase -> WHERE LOWER(armor_type) LIKE LOWER('%?%')
+    List<ArmorPiece> findByArmorTypeContainingIgnoreCase(String armorType);
+
+    // findBySlotContainingIgnoreCase -> WHERE LOWER(slot) LIKE LOWER('%?%')
+    List<ArmorPiece> findBySlotContainingIgnoreCase(String slot);
 }

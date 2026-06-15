@@ -15,5 +15,6 @@ public record ArmorPieceDTO(
         String secondaryStat,
         Integer cost,
         String notes,
-        String wowheadUrl
+        String wowheadUrl,
+        String iconUrl
 ) {}

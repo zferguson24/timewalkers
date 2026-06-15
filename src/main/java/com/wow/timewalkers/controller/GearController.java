@@ -2,6 +2,7 @@ package com.wow.timewalkers.controller;
 
 import com.wow.timewalkers.dto.ArmorPieceDTO;
 import com.wow.timewalkers.dto.ExpansionGearDTO;
+import com.wow.timewalkers.dto.GearSearchResultDTO;
 import com.wow.timewalkers.dto.WeaponDTO;
 import com.wow.timewalkers.service.GearService;
 import org.springframework.http.ResponseEntity;
@@ -67,5 +68,17 @@ public class GearController {
     @GetMapping("/armor/type")
     public ResponseEntity<List<ArmorPieceDTO>> getArmorByType(@RequestParam String name) {
         return ResponseEntity.ok(gearService.getArmorPiecesByType(name));
+    }
+
+    // GET /api/gear/weapons/type?name=... — weapons filtered by type (Sword, Axe, etc.)
+    @GetMapping("/weapons/type")
+    public ResponseEntity<List<WeaponDTO>> getWeaponsByType(@RequestParam String name) {
+        return ResponseEntity.ok(gearService.getWeaponsByType(name));
+    }
+
+    // GET /api/gear/search?q=... — unified search across name, expansion, armor type, weapon type
+    @GetMapping("/search")
+    public ResponseEntity<GearSearchResultDTO> searchGear(@RequestParam String q) {
+        return ResponseEntity.ok(gearService.searchGear(q));
     }
 }

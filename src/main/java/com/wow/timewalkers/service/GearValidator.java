@@ -23,6 +23,8 @@ public class GearValidator {
     private static final Set<WowClass> SHIELD_CLASSES;
     // Classes that can equip Held In Off-hand frills (tomes, orbs, etc.)
     private static final Set<WowClass> OFFHAND_FRILL_CLASSES;
+    // Classes that cannot equip any two-handed weapon regardless of type
+    private static final Set<WowClass> TWO_HANDED_FORBIDDEN_CLASSES;
 
     static {
         // Armor restrictions — each class is locked to one armor type
@@ -63,6 +65,8 @@ public class GearValidator {
 
         OFFHAND_FRILL_CLASSES = Set.of(
                 WowClass.DRUID, WowClass.EVOKER, WowClass.MAGE, WowClass.PRIEST, WowClass.WARLOCK);
+
+        TWO_HANDED_FORBIDDEN_CLASSES = Set.of(WowClass.DEMON_HUNTER, WowClass.ROGUE);
     }
 
     // "Agnostic" items (rings, trinkets, neck, cloak) can be worn by any class
@@ -99,6 +103,10 @@ public class GearValidator {
         // Ranged weapons (Bow, Gun, Crossbow) are treated like 2H and are Hunter-only
         if ("Ranged".equals(slot) && wowClass != WowClass.HUNTER) {
             return "Only Hunters can equip ranged weapons";
+        }
+
+        if ("2H".equals(slot) && TWO_HANDED_FORBIDDEN_CLASSES.contains(wowClass)) {
+            return wowClass.name() + " cannot equip two-handed weapons";
         }
 
         if (!WEAPON_TYPES_BY_CLASS.get(wowClass).contains(type)) {

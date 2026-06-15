@@ -302,6 +302,33 @@ class GearValidatorTest {
         void polearmInvalidForMage() {
             assertThat(validator.validateForMainHand(WowClass.MAGE, weapon("2H", "Polearm"))).isNotNull();
         }
+
+        @Test
+        @DisplayName("2H Axe is rejected for Demon Hunter despite Axe being an allowed type")
+        void twoHandedAxeRejectedForDH() {
+            String result = validator.validateForMainHand(WowClass.DEMON_HUNTER, weapon("2H", "Axe"));
+            assertThat(result).isNotNull().contains("cannot equip two-handed weapons");
+        }
+
+        @Test
+        @DisplayName("2H Sword is rejected for Demon Hunter despite Sword being an allowed type")
+        void twoHandedSwordRejectedForDH() {
+            String result = validator.validateForMainHand(WowClass.DEMON_HUNTER, weapon("2H", "Sword"));
+            assertThat(result).isNotNull().contains("cannot equip two-handed weapons");
+        }
+
+        @Test
+        @DisplayName("2H Sword is rejected for Rogue")
+        void twoHandedSwordRejectedForRogue() {
+            String result = validator.validateForMainHand(WowClass.ROGUE, weapon("2H", "Sword"));
+            assertThat(result).isNotNull().contains("cannot equip two-handed weapons");
+        }
+
+        @Test
+        @DisplayName("1H Axe is still valid for Demon Hunter main hand")
+        void oneHandedAxeValidForDH() {
+            assertThat(validator.validateForMainHand(WowClass.DEMON_HUNTER, weapon("1H", "Axe"))).isNull();
+        }
     }
 
     // -----------------------------------------------------------------------

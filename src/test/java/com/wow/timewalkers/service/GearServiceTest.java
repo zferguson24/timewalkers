@@ -2,6 +2,7 @@ package com.wow.timewalkers.service;
 
 import com.wow.timewalkers.dto.ArmorPieceDTO;
 import com.wow.timewalkers.dto.ExpansionGearDTO;
+import com.wow.timewalkers.dto.GearSearchResultDTO;
 import com.wow.timewalkers.dto.WeaponDTO;
 import com.wow.timewalkers.entity.ArmorPiece;
 import com.wow.timewalkers.entity.Weapon;
@@ -173,9 +174,9 @@ class GearServiceTest {
     @Test
     @DisplayName("getGearByExpansion combines armor and weapon results under the expansion name")
     void getGearByExpansionCombinesResults() {
-        when(armorPieceRepository.findByExpansionIgnoreCase("Classic"))
+        when(armorPieceRepository.findByExpansionContainingIgnoreCase("Classic"))
                 .thenReturn(List.of(armor("Classic Helm", "Mail", "Classic")));
-        when(weaponRepository.findByExpansionIgnoreCase("Classic"))
+        when(weaponRepository.findByExpansionContainingIgnoreCase("Classic"))
                 .thenReturn(List.of(weapon("Classic Sword", "Classic")));
 
         ExpansionGearDTO result = gearService.getGearByExpansion("Classic");
@@ -188,10 +189,22 @@ class GearServiceTest {
     }
 
     @Test
+    @DisplayName("getGearByExpansion supports partial expansion name matching")
+    void getGearByExpansionPartialMatch() {
+        when(armorPieceRepository.findByExpansionContainingIgnoreCase("Burning")).thenReturn(List.of());
+        when(weaponRepository.findByExpansionContainingIgnoreCase("Burning"))
+                .thenReturn(List.of(weapon("Warglaive of Azzinoth", "The Burning Crusade")));
+
+        ExpansionGearDTO result = gearService.getGearByExpansion("Burning");
+
+        assertThat(result.weapons()).hasSize(1);
+    }
+
+    @Test
     @DisplayName("getGearByExpansion returns empty lists when expansion has no items")
     void getGearByExpansionEmpty() {
-        when(armorPieceRepository.findByExpansionIgnoreCase("Unknown")).thenReturn(List.of());
-        when(weaponRepository.findByExpansionIgnoreCase("Unknown")).thenReturn(List.of());
+        when(armorPieceRepository.findByExpansionContainingIgnoreCase("Unknown")).thenReturn(List.of());
+        when(weaponRepository.findByExpansionContainingIgnoreCase("Unknown")).thenReturn(List.of());
 
         ExpansionGearDTO result = gearService.getGearByExpansion("Unknown");
 
@@ -207,21 +220,161 @@ class GearServiceTest {
     @Test
     @DisplayName("getArmorPiecesByType passes armor type to repo and returns mapped results")
     void getArmorPiecesByTypeDelegatesAndMaps() {
-        when(armorPieceRepository.findByArmorTypeIgnoreCase("Plate"))
+        when(armorPieceRepository.findByArmorTypeContainingIgnoreCase("Plate"))
                 .thenReturn(List.of(armor("Plate Helm", "Plate", "Classic")));
 
         List<ArmorPieceDTO> result = gearService.getArmorPiecesByType("Plate");
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).armorType()).isEqualTo("Plate");
-        verify(armorPieceRepository).findByArmorTypeIgnoreCase("Plate");
+        verify(armorPieceRepository).findByArmorTypeContainingIgnoreCase("Plate");
     }
 
     @Test
     @DisplayName("getArmorPiecesByType returns empty list for unknown type")
     void getArmorPiecesByTypeNoMatch() {
-        when(armorPieceRepository.findByArmorTypeIgnoreCase("Crystal")).thenReturn(List.of());
+        when(armorPieceRepository.findByArmorTypeContainingIgnoreCase("Crystal")).thenReturn(List.of());
 
         assertThat(gearService.getArmorPiecesByType("Crystal")).isEmpty();
+    }
+
+    // -----------------------------------------------------------------------
+    // getWeaponsByType
+    // -----------------------------------------------------------------------
+
+    @Test
+    @DisplayName("getWeaponsByType passes weapon type to repo and returns mapped results")
+    void getWeaponsByTypeDelegatesAndMaps() {
+        Weapon w = new Weapon();
+        w.setName("Quel'Serrar");
+        w.setWeaponSlot("1H");
+        w.setWeaponStat("Strength");
+        w.setWeaponType("Sword");
+        w.setExpansion("Classic");
+        w.setCost(0);
+        when(weaponRepository.findByWeaponTypeContainingIgnoreCase("Sword")).thenReturn(List.of(w));
+
+        List<WeaponDTO> result = gearService.getWeaponsByType("Sword");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).weaponType()).isEqualTo("Sword");
+        verify(weaponRepository).findByWeaponTypeContainingIgnoreCase("Sword");
+    }
+
+    @Test
+    @DisplayName("getWeaponsByType returns empty list for unknown type")
+    void getWeaponsByTypeNoMatch() {
+        when(weaponRepository.findByWeaponTypeContainingIgnoreCase("Halberd")).thenReturn(List.of());
+
+        assertThat(gearService.getWeaponsByType("Halberd")).isEmpty();
+    }
+
+    // -----------------------------------------------------------------------
+    // searchGear
+    // -----------------------------------------------------------------------
+
+    @Test
+    @DisplayName("searchGear returns armor and weapons sorted alphabetically")
+    void searchGearReturnsSortedResults() {
+        when(armorPieceRepository.findByNameContainingIgnoreCase("Classic"))
+                .thenReturn(List.of(armor("Classic Helm B", "Plate", "Classic"), armor("Classic Helm A", "Plate", "Classic")));
+        when(weaponRepository.findByNameContainingIgnoreCase("Classic"))
+                .thenReturn(List.of(weapon("Classic Sword B", "Classic"), weapon("Classic Sword A", "Classic")));
+        when(armorPieceRepository.findByExpansionContainingIgnoreCase("Classic")).thenReturn(List.of());
+        when(weaponRepository.findByExpansionContainingIgnoreCase("Classic")).thenReturn(List.of());
+        when(armorPieceRepository.findByArmorTypeContainingIgnoreCase("Classic")).thenReturn(List.of());
+        when(armorPieceRepository.findBySlotContainingIgnoreCase("Classic")).thenReturn(List.of());
+        when(weaponRepository.findByWeaponTypeContainingIgnoreCase("Classic")).thenReturn(List.of());
+        when(weaponRepository.findByWeaponSlotContainingIgnoreCase("Classic")).thenReturn(List.of());
+
+        GearSearchResultDTO result = gearService.searchGear("Classic");
+
+        assertThat(result.armorPieces()).extracting(ArmorPieceDTO::name)
+                .containsExactly("Classic Helm A", "Classic Helm B");
+        assertThat(result.weapons()).extracting(WeaponDTO::name)
+                .containsExactly("Classic Sword A", "Classic Sword B");
+    }
+
+    @Test
+    @DisplayName("searchGear deduplicates items that appear in multiple source queries")
+    void searchGearDeduplicatesAcrossSources() {
+        ArmorPiece sharedArmor = armor("Dragonstalker Helm", "Mail", "Classic");
+        when(armorPieceRepository.findByNameContainingIgnoreCase("Dragon"))
+                .thenReturn(List.of(sharedArmor));
+        when(weaponRepository.findByNameContainingIgnoreCase("Dragon")).thenReturn(List.of());
+        // Same item also returned by expansion query — should not appear twice
+        when(armorPieceRepository.findByExpansionContainingIgnoreCase("Dragon"))
+                .thenReturn(List.of(sharedArmor));
+        when(weaponRepository.findByExpansionContainingIgnoreCase("Dragon")).thenReturn(List.of());
+        when(armorPieceRepository.findByArmorTypeContainingIgnoreCase("Dragon")).thenReturn(List.of());
+        when(armorPieceRepository.findBySlotContainingIgnoreCase("Dragon")).thenReturn(List.of());
+        when(weaponRepository.findByWeaponTypeContainingIgnoreCase("Dragon")).thenReturn(List.of());
+        when(weaponRepository.findByWeaponSlotContainingIgnoreCase("Dragon")).thenReturn(List.of());
+
+        GearSearchResultDTO result = gearService.searchGear("Dragon");
+
+        assertThat(result.armorPieces()).hasSize(1);
+        assertThat(result.armorPieces().get(0).name()).isEqualTo("Dragonstalker Helm");
+    }
+
+    @Test
+    @DisplayName("searchGear returns items matched by armor slot")
+    void searchGearByArmorSlot() {
+        ArmorPiece ring1 = armor("Band of Eternity", "Agnostic", "Classic");
+        ArmorPiece ring2 = armor("Ring of Power", "Agnostic", "Shadowlands");
+        ring1.setSlot("Ring");
+        ring2.setSlot("Ring");
+        when(armorPieceRepository.findByNameContainingIgnoreCase("Ring")).thenReturn(List.of());
+        when(weaponRepository.findByNameContainingIgnoreCase("Ring")).thenReturn(List.of());
+        when(armorPieceRepository.findByExpansionContainingIgnoreCase("Ring")).thenReturn(List.of());
+        when(weaponRepository.findByExpansionContainingIgnoreCase("Ring")).thenReturn(List.of());
+        when(armorPieceRepository.findByArmorTypeContainingIgnoreCase("Ring")).thenReturn(List.of());
+        when(armorPieceRepository.findBySlotContainingIgnoreCase("Ring")).thenReturn(List.of(ring1, ring2));
+        when(weaponRepository.findByWeaponTypeContainingIgnoreCase("Ring")).thenReturn(List.of());
+        when(weaponRepository.findByWeaponSlotContainingIgnoreCase("Ring")).thenReturn(List.of());
+
+        GearSearchResultDTO result = gearService.searchGear("Ring");
+
+        assertThat(result.armorPieces()).hasSize(2);
+        assertThat(result.weapons()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("searchGear returns items matched by weapon slot")
+    void searchGearByWeaponSlot() {
+        Weapon offhand = weapon("Tome of Power", "Classic");
+        offhand.setWeaponSlot("Offhand");
+        when(armorPieceRepository.findByNameContainingIgnoreCase("Offhand")).thenReturn(List.of());
+        when(weaponRepository.findByNameContainingIgnoreCase("Offhand")).thenReturn(List.of());
+        when(armorPieceRepository.findByExpansionContainingIgnoreCase("Offhand")).thenReturn(List.of());
+        when(weaponRepository.findByExpansionContainingIgnoreCase("Offhand")).thenReturn(List.of());
+        when(armorPieceRepository.findByArmorTypeContainingIgnoreCase("Offhand")).thenReturn(List.of());
+        when(armorPieceRepository.findBySlotContainingIgnoreCase("Offhand")).thenReturn(List.of());
+        when(weaponRepository.findByWeaponTypeContainingIgnoreCase("Offhand")).thenReturn(List.of());
+        when(weaponRepository.findByWeaponSlotContainingIgnoreCase("Offhand")).thenReturn(List.of(offhand));
+
+        GearSearchResultDTO result = gearService.searchGear("Offhand");
+
+        assertThat(result.armorPieces()).isEmpty();
+        assertThat(result.weapons()).hasSize(1);
+        assertThat(result.weapons().get(0).name()).isEqualTo("Tome of Power");
+    }
+
+    @Test
+    @DisplayName("searchGear returns empty lists when no query matches anything")
+    void searchGearNoMatch() {
+        when(armorPieceRepository.findByNameContainingIgnoreCase("zzz")).thenReturn(List.of());
+        when(weaponRepository.findByNameContainingIgnoreCase("zzz")).thenReturn(List.of());
+        when(armorPieceRepository.findByExpansionContainingIgnoreCase("zzz")).thenReturn(List.of());
+        when(weaponRepository.findByExpansionContainingIgnoreCase("zzz")).thenReturn(List.of());
+        when(armorPieceRepository.findByArmorTypeContainingIgnoreCase("zzz")).thenReturn(List.of());
+        when(armorPieceRepository.findBySlotContainingIgnoreCase("zzz")).thenReturn(List.of());
+        when(weaponRepository.findByWeaponTypeContainingIgnoreCase("zzz")).thenReturn(List.of());
+        when(weaponRepository.findByWeaponSlotContainingIgnoreCase("zzz")).thenReturn(List.of());
+
+        GearSearchResultDTO result = gearService.searchGear("zzz");
+
+        assertThat(result.armorPieces()).isEmpty();
+        assertThat(result.weapons()).isEmpty();
     }
 }

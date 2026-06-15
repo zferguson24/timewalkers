@@ -24,7 +24,8 @@ public class GearMapper {
                 entity.getSecondaryStat(),
                 entity.getCost(),
                 entity.getNotes(),
-                entity.getWowheadUrl()
+                entity.getWowheadUrl(),
+                entity.getIconUrl()
         );
     }
 
@@ -39,7 +40,8 @@ public class GearMapper {
                 entity.getSecondaryStat(),
                 entity.getCost(),
                 entity.getNotes(),
-                entity.getWowheadUrl()
+                entity.getWowheadUrl(),
+                entity.getIconUrl()
         );
     }
 }

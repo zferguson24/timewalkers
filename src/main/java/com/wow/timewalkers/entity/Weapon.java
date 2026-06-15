@@ -43,6 +43,9 @@ public class Weapon {
     @Column(name = "wowhead_url")
     private String wowheadUrl;
 
+    @Column(name = "icon_url")
+    private String iconUrl;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -75,4 +78,7 @@ public class Weapon {
 
     public String getWowheadUrl() { return wowheadUrl; }
     public void setWowheadUrl(String wowheadUrl) { this.wowheadUrl = wowheadUrl; }
+
+    public String getIconUrl() { return iconUrl; }
+    public void setIconUrl(String iconUrl) { this.iconUrl = iconUrl; }
 }

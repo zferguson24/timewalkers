@@ -2,6 +2,7 @@ package com.wow.timewalkers.controller;
 
 import com.wow.timewalkers.dto.ArmorPieceDTO;
 import com.wow.timewalkers.dto.ExpansionGearDTO;
+import com.wow.timewalkers.dto.GearSearchResultDTO;
 import com.wow.timewalkers.dto.WeaponDTO;
 import com.wow.timewalkers.exception.GlobalExceptionHandler;
 import com.wow.timewalkers.service.GearService;
@@ -52,7 +53,7 @@ class GearControllerTest {
     @DisplayName("GET /api/gear/armor returns 200 with armor list")
     void getAllArmorReturns200() throws Exception {
         ArmorPieceDTO dto = new ArmorPieceDTO("Leather", "Helm", "Demon's Skull",
-                "The Burning Crusade", "Agility", "Haste", 50, null, null);
+                "The Burning Crusade", "Agility", "Haste", 50, null, null, null);
         when(gearService.getAllArmorPieces()).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/gear/armor"))
@@ -79,7 +80,7 @@ class GearControllerTest {
     @DisplayName("GET /api/gear/weapons returns 200 with weapon list")
     void getAllWeaponsReturns200() throws Exception {
         WeaponDTO dto = new WeaponDTO("1H", "Agility", "Warglaive", "Warglaive of Azzinoth",
-                "The Burning Crusade", "Agility", "Haste", 0, null, null);
+                "The Burning Crusade", "Agility", "Haste", 0, null, null, null);
         when(gearService.getAllWeapons()).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/gear/weapons"))
@@ -106,7 +107,7 @@ class GearControllerTest {
     @DisplayName("GET /api/gear/armor/search?name= returns 200 with matching results")
     void searchArmorReturns200() throws Exception {
         ArmorPieceDTO dto = new ArmorPieceDTO("Plate", "Helm", "Battlegear Helm",
-                "Classic", "Strength", null, 100, null, null);
+                "Classic", "Strength", null, 100, null, null, null);
         when(gearService.getArmorPiecesByName("Battlegear")).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/gear/armor/search").param("name", "Battlegear"))
@@ -131,7 +132,7 @@ class GearControllerTest {
     @DisplayName("GET /api/gear/weapons/search?name= returns 200 with matching results")
     void searchWeaponsReturns200() throws Exception {
         WeaponDTO dto = new WeaponDTO("1H", "Agility", "Sword", "Quel'Serrar",
-                "Classic", "Agility", null, 0, null, null);
+                "Classic", "Agility", null, 0, null, null, null);
         when(gearService.getWeaponsByName("Quel")).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/gear/weapons/search").param("name", "Quel"))
@@ -178,7 +179,7 @@ class GearControllerTest {
     @DisplayName("GET /api/gear/armor/type?name= returns 200 with filtered armor")
     void getArmorByTypeReturns200() throws Exception {
         ArmorPieceDTO dto = new ArmorPieceDTO("Plate", "Helm", "Plate Helm",
-                "Classic", "Strength", null, 0, null, null);
+                "Classic", "Strength", null, 0, null, null, null);
         when(gearService.getArmorPiecesByType("Plate")).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/gear/armor/type").param("name", "Plate"))
@@ -192,6 +193,61 @@ class GearControllerTest {
     @DisplayName("GET /api/gear/armor/type without name param returns 400")
     void getArmorByTypeMissingParamReturns400() throws Exception {
         mockMvc.perform(get("/api/gear/armor/type"))
+                .andExpect(status().isBadRequest());
+    }
+
+    // -----------------------------------------------------------------------
+    // GET /api/gear/weapons/type
+    // -----------------------------------------------------------------------
+
+    @Test
+    @DisplayName("GET /api/gear/weapons/type?name= returns 200 with matching results")
+    void getWeaponsByTypeReturns200() throws Exception {
+        WeaponDTO dto = new WeaponDTO("1H", "Strength", "Sword", "Quel'Serrar",
+                "Classic", "Strength", null, 0, null, null, null);
+        when(gearService.getWeaponsByType("Sword")).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/gear/weapons/type").param("name", "Sword"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Quel'Serrar"))
+                .andExpect(jsonPath("$[0].weaponType").value("Sword"));
+
+        verify(gearService).getWeaponsByType("Sword");
+    }
+
+    @Test
+    @DisplayName("GET /api/gear/weapons/type without name param returns 400")
+    void getWeaponsByTypeMissingParamReturns400() throws Exception {
+        mockMvc.perform(get("/api/gear/weapons/type"))
+                .andExpect(status().isBadRequest());
+    }
+
+    // -----------------------------------------------------------------------
+    // GET /api/gear/search
+    // -----------------------------------------------------------------------
+
+    @Test
+    @DisplayName("GET /api/gear/search?q= returns 200 with armor and weapon lists")
+    void searchGearReturns200() throws Exception {
+        ArmorPieceDTO armor = new ArmorPieceDTO("Plate", "Helm", "Plate Helm",
+                "Classic", "Strength", null, 0, null, null, null);
+        WeaponDTO weapon = new WeaponDTO("1H", "Agility", "Sword", "Classic Sword",
+                "Classic", "Agility", null, 0, null, null, null);
+        GearSearchResultDTO dto = new GearSearchResultDTO(List.of(armor), List.of(weapon));
+        when(gearService.searchGear("Classic")).thenReturn(dto);
+
+        mockMvc.perform(get("/api/gear/search").param("q", "Classic"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.armorPieces[0].name").value("Plate Helm"))
+                .andExpect(jsonPath("$.weapons[0].name").value("Classic Sword"));
+
+        verify(gearService).searchGear("Classic");
+    }
+
+    @Test
+    @DisplayName("GET /api/gear/search without q param returns 400")
+    void searchGearMissingParamReturns400() throws Exception {
+        mockMvc.perform(get("/api/gear/search"))
                 .andExpect(status().isBadRequest());
     }
 }
