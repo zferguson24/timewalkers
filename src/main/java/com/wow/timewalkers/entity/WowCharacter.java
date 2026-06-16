@@ -1,6 +1,7 @@
 package com.wow.timewalkers.entity;
 
 import com.wow.timewalkers.enums.WowClass;
+import com.wow.timewalkers.enums.WowGender;
 import com.wow.timewalkers.enums.WowRace;
 import jakarta.persistence.*;
 
@@ -32,6 +33,10 @@ public class WowCharacter {
     @Column(name = "character_class", nullable = false)
     private WowClass characterClass;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private WowGender gender;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -43,4 +48,7 @@ public class WowCharacter {
 
     public WowClass getCharacterClass() { return characterClass; }
     public void setCharacterClass(WowClass characterClass) { this.characterClass = characterClass; }
+
+    public WowGender getGender() { return gender; }
+    public void setGender(WowGender gender) { this.gender = gender; }
 }

@@ -3,6 +3,7 @@ package com.wow.timewalkers.controller;
 import com.wow.timewalkers.dto.*;
 import com.wow.timewalkers.enums.EquipmentSlot;
 import com.wow.timewalkers.enums.WowClass;
+import com.wow.timewalkers.enums.WowGender;
 import com.wow.timewalkers.enums.WowRace;
 import com.wow.timewalkers.exception.CharacterNameConflictException;
 import com.wow.timewalkers.exception.CharacterNotFoundException;
@@ -58,7 +59,7 @@ class CharacterControllerTest {
         List<EquippedSlotDTO> slots = Arrays.stream(EquipmentSlot.values())
                 .map(s -> new EquippedSlotDTO(s, false, null))
                 .collect(Collectors.toList());
-        return new CharacterDTO("JARAXXUS", WowRace.NIGHT_ELF, WowClass.DEMON_HUNTER, slots);
+        return new CharacterDTO("JARAXXUS", WowRace.NIGHT_ELF, WowClass.DEMON_HUNTER, WowGender.MALE, slots);
     }
 
     // -----------------------------------------------------------------------
@@ -68,7 +69,7 @@ class CharacterControllerTest {
     @Test
     @DisplayName("GET /api/characters returns 200 with list of character summaries")
     void getAllCharactersReturns200() throws Exception {
-        CharacterSummaryDTO summary = new CharacterSummaryDTO("JARAXXUS", WowRace.NIGHT_ELF, WowClass.DEMON_HUNTER);
+        CharacterSummaryDTO summary = new CharacterSummaryDTO("JARAXXUS", WowRace.NIGHT_ELF, WowClass.DEMON_HUNTER, WowGender.MALE);
         when(characterService.getAllCharacters()).thenReturn(List.of(summary));
 
         mockMvc.perform(get("/api/characters"))
@@ -103,7 +104,8 @@ class CharacterControllerTest {
                                 {
                                   "name": "jaraxxus",
                                   "race": "NIGHT_ELF",
-                                  "characterClass": "DEMON_HUNTER"
+                                  "characterClass": "DEMON_HUNTER",
+                                  "gender": "MALE"
                                 }
                                 """))
                 .andExpect(status().isCreated())
@@ -125,7 +127,8 @@ class CharacterControllerTest {
                                 {
                                   "name": "jaraxxus",
                                   "race": "NIGHT_ELF",
-                                  "characterClass": "DEMON_HUNTER"
+                                  "characterClass": "DEMON_HUNTER",
+                                  "gender": "MALE"
                                 }
                                 """))
                 .andExpect(status().isConflict())
@@ -144,7 +147,8 @@ class CharacterControllerTest {
                                 {
                                   "name": "jaraxxus",
                                   "race": "HUMAN",
-                                  "characterClass": "EVOKER"
+                                  "characterClass": "EVOKER",
+                                  "gender": "MALE"
                                 }
                                 """))
                 .andExpect(status().isBadRequest())

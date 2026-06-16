@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS characters (
     id              BIGSERIAL    PRIMARY KEY,
     name            VARCHAR(100) NOT NULL UNIQUE,
     race            VARCHAR(50)  NOT NULL,
-    character_class VARCHAR(50)  NOT NULL
+    character_class VARCHAR(50)  NOT NULL,
+    gender          VARCHAR(50)  NOT NULL DEFAULT 'MALE'
 );
 
 CREATE TABLE IF NOT EXISTS character_equipment (

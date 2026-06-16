@@ -66,6 +66,7 @@ public class CharacterService {
         character.setName(name);
         character.setRace(request.race());
         character.setCharacterClass(request.characterClass());
+        character.setGender(request.gender());
         // save() either inserts (new entity) or updates (existing entity with an id set).
         // It returns the managed entity with its generated id populated.
         characterRepository.save(character);
@@ -75,7 +76,7 @@ public class CharacterService {
     @Transactional(readOnly = true)
     public List<CharacterSummaryDTO> getAllCharacters() {
         return characterRepository.findAll().stream()
-                .map(c -> new CharacterSummaryDTO(c.getName(), c.getRace(), c.getCharacterClass()))
+                .map(c -> new CharacterSummaryDTO(c.getName(), c.getRace(), c.getCharacterClass(), c.getGender()))
                 .toList();
     }
 
