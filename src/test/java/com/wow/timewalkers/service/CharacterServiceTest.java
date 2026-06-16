@@ -8,6 +8,7 @@ import com.wow.timewalkers.entity.WowCharacter;
 import com.wow.timewalkers.enums.EquipmentSlot;
 import com.wow.timewalkers.enums.ItemType;
 import com.wow.timewalkers.enums.WowClass;
+import com.wow.timewalkers.enums.WowGender;
 import com.wow.timewalkers.enums.WowRace;
 import com.wow.timewalkers.exception.CharacterNameConflictException;
 import com.wow.timewalkers.exception.CharacterNotFoundException;
@@ -157,7 +158,7 @@ class CharacterServiceTest {
             when(characterRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             CharacterDTO result = characterService.createCharacter(
-                    new CreateCharacterRequest("jaraxxus", WowRace.NIGHT_ELF, WowClass.DEMON_HUNTER));
+                    new CreateCharacterRequest("jaraxxus", WowRace.NIGHT_ELF, WowClass.DEMON_HUNTER, WowGender.MALE));
 
             assertThat(result.name()).isEqualTo("JARAXXUS");
             assertThat(result.race()).isEqualTo(WowRace.NIGHT_ELF);
@@ -173,7 +174,7 @@ class CharacterServiceTest {
             when(characterRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             characterService.createCharacter(
-                    new CreateCharacterRequest("jaraxxus", WowRace.NIGHT_ELF, WowClass.DEMON_HUNTER));
+                    new CreateCharacterRequest("jaraxxus", WowRace.NIGHT_ELF, WowClass.DEMON_HUNTER, WowGender.MALE));
 
             // Verify existsByName was called with the uppercased version
             verify(characterRepository).existsByName("JARAXXUS");
@@ -185,7 +186,7 @@ class CharacterServiceTest {
             when(characterRepository.existsByName("JARAXXUS")).thenReturn(true);
 
             assertThatThrownBy(() -> characterService.createCharacter(
-                    new CreateCharacterRequest("jaraxxus", WowRace.NIGHT_ELF, WowClass.DEMON_HUNTER)))
+                    new CreateCharacterRequest("jaraxxus", WowRace.NIGHT_ELF, WowClass.DEMON_HUNTER, WowGender.MALE)))
                     .isInstanceOf(CharacterNameConflictException.class)
                     .hasMessageContaining("JARAXXUS");
 
@@ -197,7 +198,7 @@ class CharacterServiceTest {
         void throwsInvalidRaceClassForBadCombo() {
             // Human cannot be an Evoker
             assertThatThrownBy(() -> characterService.createCharacter(
-                    new CreateCharacterRequest("jaraxxus", WowRace.HUMAN, WowClass.EVOKER)))
+                    new CreateCharacterRequest("jaraxxus", WowRace.HUMAN, WowClass.EVOKER, WowGender.MALE)))
                     .isInstanceOf(InvalidRaceClassCombinationException.class)
                     .hasMessageContaining("Human")
                     .hasMessageContaining("Evoker");
@@ -211,7 +212,7 @@ class CharacterServiceTest {
         void raceClassValidationRunsBeforeNameCheck() {
             // Even if the name existed, we'd see the race/class error first
             assertThatThrownBy(() -> characterService.createCharacter(
-                    new CreateCharacterRequest("jaraxxus", WowRace.DRACTHYR, WowClass.PALADIN)))
+                    new CreateCharacterRequest("jaraxxus", WowRace.DRACTHYR, WowClass.PALADIN, WowGender.MALE)))
                     .isInstanceOf(InvalidRaceClassCombinationException.class);
 
             verify(characterRepository, never()).existsByName(any());

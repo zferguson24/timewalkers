@@ -1,6 +1,7 @@
 package com.wow.timewalkers.dto;
 
 import com.wow.timewalkers.enums.WowClass;
+import com.wow.timewalkers.enums.WowGender;
 import com.wow.timewalkers.enums.WowRace;
 
 import java.util.List;
@@ -11,5 +12,6 @@ public record CharacterDTO(
         String name,
         WowRace race,
         WowClass characterClass,
+        WowGender gender,
         List<EquippedSlotDTO> equipment
 ) {}

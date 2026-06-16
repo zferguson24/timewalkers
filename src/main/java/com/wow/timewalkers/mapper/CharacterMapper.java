@@ -47,6 +47,6 @@ public class CharacterMapper {
                 })
                 .toList();
 
-        return new CharacterDTO(character.getName(), character.getRace(), character.getCharacterClass(), slots);
+        return new CharacterDTO(character.getName(), character.getRace(), character.getCharacterClass(), character.getGender(), slots);
     }
 }
