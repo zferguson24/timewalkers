@@ -50,7 +50,7 @@ class GearServiceTest {
         ArmorPiece ap = new ArmorPiece();
         ap.setName(name);
         ap.setArmorType(type);
-        ap.setSlot("Helm");
+        ap.setSlot("Head");
         ap.setExpansion(expansion);
         ap.setCost(0);
         return ap;
@@ -322,18 +322,18 @@ class GearServiceTest {
     void searchGearByArmorSlot() {
         ArmorPiece ring1 = armor("Band of Eternity", "Agnostic", "Classic");
         ArmorPiece ring2 = armor("Ring of Power", "Agnostic", "Shadowlands");
-        ring1.setSlot("Ring");
-        ring2.setSlot("Ring");
-        when(armorPieceRepository.findByNameContainingIgnoreCase("Ring")).thenReturn(List.of());
-        when(weaponRepository.findByNameContainingIgnoreCase("Ring")).thenReturn(List.of());
-        when(armorPieceRepository.findByExpansionContainingIgnoreCase("Ring")).thenReturn(List.of());
-        when(weaponRepository.findByExpansionContainingIgnoreCase("Ring")).thenReturn(List.of());
-        when(armorPieceRepository.findByArmorTypeContainingIgnoreCase("Ring")).thenReturn(List.of());
-        when(armorPieceRepository.findBySlotContainingIgnoreCase("Ring")).thenReturn(List.of(ring1, ring2));
-        when(weaponRepository.findByWeaponTypeContainingIgnoreCase("Ring")).thenReturn(List.of());
-        when(weaponRepository.findByWeaponSlotContainingIgnoreCase("Ring")).thenReturn(List.of());
+        ring1.setSlot("Finger");
+        ring2.setSlot("Finger");
+        when(armorPieceRepository.findByNameContainingIgnoreCase("Finger")).thenReturn(List.of());
+        when(weaponRepository.findByNameContainingIgnoreCase("Finger")).thenReturn(List.of());
+        when(armorPieceRepository.findByExpansionContainingIgnoreCase("Finger")).thenReturn(List.of());
+        when(weaponRepository.findByExpansionContainingIgnoreCase("Finger")).thenReturn(List.of());
+        when(armorPieceRepository.findByArmorTypeContainingIgnoreCase("Finger")).thenReturn(List.of());
+        when(armorPieceRepository.findBySlotContainingIgnoreCase("Finger")).thenReturn(List.of(ring1, ring2));
+        when(weaponRepository.findByWeaponTypeContainingIgnoreCase("Finger")).thenReturn(List.of());
+        when(weaponRepository.findByWeaponSlotContainingIgnoreCase("Finger")).thenReturn(List.of());
 
-        GearSearchResultDTO result = gearService.searchGear("Ring");
+        GearSearchResultDTO result = gearService.searchGear("Finger");
 
         assertThat(result.armorPieces()).hasSize(2);
         assertThat(result.weapons()).isEmpty();
@@ -343,17 +343,17 @@ class GearServiceTest {
     @DisplayName("searchGear returns items matched by weapon slot")
     void searchGearByWeaponSlot() {
         Weapon offhand = weapon("Tome of Power", "Classic");
-        offhand.setWeaponSlot("Offhand");
-        when(armorPieceRepository.findByNameContainingIgnoreCase("Offhand")).thenReturn(List.of());
-        when(weaponRepository.findByNameContainingIgnoreCase("Offhand")).thenReturn(List.of());
-        when(armorPieceRepository.findByExpansionContainingIgnoreCase("Offhand")).thenReturn(List.of());
-        when(weaponRepository.findByExpansionContainingIgnoreCase("Offhand")).thenReturn(List.of());
-        when(armorPieceRepository.findByArmorTypeContainingIgnoreCase("Offhand")).thenReturn(List.of());
-        when(armorPieceRepository.findBySlotContainingIgnoreCase("Offhand")).thenReturn(List.of());
-        when(weaponRepository.findByWeaponTypeContainingIgnoreCase("Offhand")).thenReturn(List.of());
-        when(weaponRepository.findByWeaponSlotContainingIgnoreCase("Offhand")).thenReturn(List.of(offhand));
+        offhand.setWeaponSlot("Off-Hand");
+        when(armorPieceRepository.findByNameContainingIgnoreCase("Off-Hand")).thenReturn(List.of());
+        when(weaponRepository.findByNameContainingIgnoreCase("Off-Hand")).thenReturn(List.of());
+        when(armorPieceRepository.findByExpansionContainingIgnoreCase("Off-Hand")).thenReturn(List.of());
+        when(weaponRepository.findByExpansionContainingIgnoreCase("Off-Hand")).thenReturn(List.of());
+        when(armorPieceRepository.findByArmorTypeContainingIgnoreCase("Off-Hand")).thenReturn(List.of());
+        when(armorPieceRepository.findBySlotContainingIgnoreCase("Off-Hand")).thenReturn(List.of());
+        when(weaponRepository.findByWeaponTypeContainingIgnoreCase("Off-Hand")).thenReturn(List.of());
+        when(weaponRepository.findByWeaponSlotContainingIgnoreCase("Off-Hand")).thenReturn(List.of(offhand));
 
-        GearSearchResultDTO result = gearService.searchGear("Offhand");
+        GearSearchResultDTO result = gearService.searchGear("Off-Hand");
 
         assertThat(result.armorPieces()).isEmpty();
         assertThat(result.weapons()).hasSize(1);

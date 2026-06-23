@@ -76,7 +76,7 @@ class CharacterServiceTest {
         ArmorPiece ap = new ArmorPiece();
         ap.setName(name);
         ap.setArmorType(armorType);
-        ap.setSlot("Helm");
+        ap.setSlot("Head");
         ap.setExpansion("Classic");
         ap.setCost(0);
         return ap;
@@ -86,7 +86,7 @@ class CharacterServiceTest {
         ArmorPiece ap = new ArmorPiece();
         ap.setName(name);
         ap.setArmorType("Agnostic");
-        ap.setSlot("Ring");
+        ap.setSlot("Finger");
         ap.setExpansion("Classic");
         ap.setCost(0);
         return ap;
@@ -406,10 +406,10 @@ class CharacterServiceTest {
         }
 
         @Test
-        @DisplayName("Offhand-slot item placed in MAIN_HAND slot throws GearValidationException")
+        @DisplayName("Off-Hand-slot item placed in MAIN_HAND slot throws GearValidationException")
         void offhandItemInMainHandRejected() {
             WowCharacter c = character(WowClass.WARRIOR);
-            Weapon shield = weapon("Shield of the Ages", "Offhand", "Shield");
+            Weapon shield = weapon("Shield of the Ages", "Off-Hand", "Shield");
 
             when(characterRepository.findByName("JARAXXUS")).thenReturn(Optional.of(c));
             when(weaponRepository.findByNameIgnoreCase("Shield of the Ages")).thenReturn(Optional.of(shield));
@@ -424,7 +424,7 @@ class CharacterServiceTest {
         void twoHandedPlusOffhandInSameRequestRejected() {
             WowCharacter c = character(WowClass.WARRIOR);
             Weapon twoHander = weapon("Ashkandi", "2H", "Sword");
-            Weapon shield = weapon("War Shield", "Offhand", "Shield");
+            Weapon shield = weapon("War Shield", "Off-Hand", "Shield");
 
             when(characterRepository.findByName("JARAXXUS")).thenReturn(Optional.of(c));
             when(weaponRepository.findByNameIgnoreCase("Ashkandi")).thenReturn(Optional.of(twoHander));
@@ -442,7 +442,7 @@ class CharacterServiceTest {
         @DisplayName("Equipping off-hand when character already has a 2H equipped throws GearValidationException")
         void offHandWithExisting2HRejected() {
             WowCharacter c = character(WowClass.WARRIOR);
-            Weapon shield = weapon("War Shield", "Offhand", "Shield");
+            Weapon shield = weapon("War Shield", "Off-Hand", "Shield");
 
             // Simulate an existing 2H in MAIN_HAND in the DB
             Weapon existing2H = weapon("Ashkandi", "2H", "Sword");
@@ -519,7 +519,7 @@ class CharacterServiceTest {
         @DisplayName("Shield can be equipped by Paladin in off-hand")
         void shieldEquippedByPaladin() {
             WowCharacter c = character(WowClass.PALADIN);
-            Weapon shield = weapon("Holy Shield", "Offhand", "Shield");
+            Weapon shield = weapon("Holy Shield", "Off-Hand", "Shield");
 
             when(characterRepository.findByName("JARAXXUS")).thenReturn(Optional.of(c));
             when(weaponRepository.findByNameIgnoreCase("Holy Shield")).thenReturn(Optional.of(shield));
@@ -538,7 +538,7 @@ class CharacterServiceTest {
         @DisplayName("Shield cannot be equipped by Demon Hunter")
         void shieldRejectedForDH() {
             WowCharacter c = character(WowClass.DEMON_HUNTER);
-            Weapon shield = weapon("Holy Shield", "Offhand", "Shield");
+            Weapon shield = weapon("Holy Shield", "Off-Hand", "Shield");
 
             when(characterRepository.findByName("JARAXXUS")).thenReturn(Optional.of(c));
             when(weaponRepository.findByNameIgnoreCase("Holy Shield")).thenReturn(Optional.of(shield));
@@ -552,7 +552,7 @@ class CharacterServiceTest {
         @DisplayName("Held In Off-hand frill accepted by Mage")
         void frillAcceptedByMage() {
             WowCharacter c = character(WowClass.MAGE);
-            Weapon tome = weapon("Tome of Arcane Power", "Offhand", "Held In Off-hand");
+            Weapon tome = weapon("Tome of Arcane Power", "Off-Hand", "Held In Off-hand");
 
             when(characterRepository.findByName("JARAXXUS")).thenReturn(Optional.of(c));
             when(weaponRepository.findByNameIgnoreCase("Tome of Arcane Power")).thenReturn(Optional.of(tome));

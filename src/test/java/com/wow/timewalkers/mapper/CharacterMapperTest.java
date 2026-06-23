@@ -68,7 +68,7 @@ class CharacterMapperTest {
     void equippedArmorSlotMapsCorrectly() {
         ArmorPiece ap = new ArmorPiece();
         ap.setArmorType("Leather");
-        ap.setSlot("Helm");
+        ap.setSlot("Head");
         ap.setName("Demon's Skull");
         ap.setExpansion("The Burning Crusade");
         ap.setCost(50);
@@ -137,25 +137,25 @@ class CharacterMapperTest {
     @Test
     @DisplayName("Multiple equipped slots are all reflected in the DTO")
     void multipleEquippedSlots() {
-        ArmorPiece helm = new ArmorPiece();
-        helm.setArmorType("Leather"); helm.setSlot("Helm");
-        helm.setName("Helm"); helm.setExpansion("Classic"); helm.setCost(0);
+        ArmorPiece head = new ArmorPiece();
+        head.setArmorType("Leather"); head.setSlot("Head");
+        head.setName("Helm"); head.setExpansion("Classic"); head.setCost(0);
 
         ArmorPiece chest = new ArmorPiece();
         chest.setArmorType("Leather"); chest.setSlot("Chest");
         chest.setName("Chest"); chest.setExpansion("Classic"); chest.setCost(0);
 
-        CharacterEquipment ceHelm = new CharacterEquipment();
-        ceHelm.setSlot(EquipmentSlot.HEAD);
-        ceHelm.setItemType(ItemType.ARMOR);
-        ceHelm.setArmorPiece(helm);
+        CharacterEquipment ceHead = new CharacterEquipment();
+        ceHead.setSlot(EquipmentSlot.HEAD);
+        ceHead.setItemType(ItemType.ARMOR);
+        ceHead.setArmorPiece(head);
 
         CharacterEquipment ceChest = new CharacterEquipment();
         ceChest.setSlot(EquipmentSlot.CHEST);
         ceChest.setItemType(ItemType.ARMOR);
         ceChest.setArmorPiece(chest);
 
-        CharacterDTO dto = mapper.toCharacterDTO(makeCharacter(), List.of(ceHelm, ceChest));
+        CharacterDTO dto = mapper.toCharacterDTO(makeCharacter(), List.of(ceHead, ceChest));
 
         long equippedCount = dto.equipment().stream().filter(EquippedSlotDTO::equipped).count();
         assertThat(equippedCount).isEqualTo(2);

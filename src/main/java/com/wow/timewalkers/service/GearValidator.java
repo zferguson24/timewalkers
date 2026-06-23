@@ -96,7 +96,7 @@ public class GearValidator {
         String type = weapon.getWeaponType();
 
         // Off-hand dedicated items (shields, frills) cannot be placed in main hand
-        if ("Offhand".equals(slot)) {
+        if ("Off-Hand".equals(slot)) {
             return type + " items can only be equipped in the off-hand slot";
         }
 
@@ -126,7 +126,7 @@ public class GearValidator {
             return "Two-handed and ranged weapons cannot be equipped in the off-hand slot";
         }
 
-        if ("Offhand".equals(slot)) {
+        if ("Off-Hand".equals(slot)) {
             if ("Shield".equals(type)) {
                 return canUseShield(wowClass) ? null
                         : wowClass.name() + " cannot use shields";

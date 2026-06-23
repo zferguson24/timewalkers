@@ -25,7 +25,7 @@ class GearMapperTest {
     void toArmorPieceDTOMapsAllFields() {
         ArmorPiece entity = new ArmorPiece();
         entity.setArmorType("Leather");
-        entity.setSlot("Helm");
+        entity.setSlot("Head");
         entity.setName("Helm of the Fallen Hero");
         entity.setExpansion("Wrath of the Lich King");
         entity.setPrimaryStat("Agility");
@@ -38,7 +38,7 @@ class GearMapperTest {
         ArmorPieceDTO dto = mapper.toArmorPieceDTO(entity);
 
         assertThat(dto.armorType()).isEqualTo("Leather");
-        assertThat(dto.slot()).isEqualTo("Helm");
+        assertThat(dto.slot()).isEqualTo("Head");
         assertThat(dto.name()).isEqualTo("Helm of the Fallen Hero");
         assertThat(dto.expansion()).isEqualTo("Wrath of the Lich King");
         assertThat(dto.primaryStat()).isEqualTo("Agility");
@@ -54,7 +54,7 @@ class GearMapperTest {
     void toArmorPieceDTOHandlesNulls() {
         ArmorPiece entity = new ArmorPiece();
         entity.setArmorType("Cloth");
-        entity.setSlot("Ring");
+        entity.setSlot("Finger");
         entity.setName("Simple Ring");
         entity.setExpansion("Classic");
         entity.setCost(0);

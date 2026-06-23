@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS armor_pieces (
 -- Weapons table (1H, 2H, Offhand/Shield, Ranged)
 CREATE TABLE IF NOT EXISTS weapons (
     id             BIGSERIAL    PRIMARY KEY,
-    weapon_slot    VARCHAR(20)  NOT NULL,   -- '1H', '2H', 'Offhand', 'Ranged'
+    weapon_slot    VARCHAR(20)  NOT NULL,   -- '1H', '2H', 'Off-Hand', 'Ranged'
     weapon_stat    VARCHAR(50)  NOT NULL,   -- 'Strength', 'Agility', 'Intellect', etc.
     weapon_type    VARCHAR(30)  NOT NULL,   -- 'Sword', 'Axe', 'Mace', 'Polearm', 'Shield', etc.
     name           VARCHAR(150) NOT NULL,

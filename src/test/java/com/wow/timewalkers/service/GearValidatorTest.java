@@ -204,9 +204,9 @@ class GearValidatorTest {
         }
 
         @Test
-        @DisplayName("weapon_slot 'Offhand' returns false")
+        @DisplayName("weapon_slot 'Off-Hand' returns false")
         void offhand() {
-            assertThat(validator.isTwoHandedOrRanged(weapon("Offhand", "Shield"))).isFalse();
+            assertThat(validator.isTwoHandedOrRanged(weapon("Off-Hand", "Shield"))).isFalse();
         }
     }
 
@@ -219,16 +219,16 @@ class GearValidatorTest {
     class ValidateForMainHand {
 
         @Test
-        @DisplayName("Offhand-slot item (Shield) is rejected from main hand")
+        @DisplayName("Off-Hand-slot item (Shield) is rejected from main hand")
         void offhandSlotItemRejected() {
-            String result = validator.validateForMainHand(WowClass.WARRIOR, weapon("Offhand", "Shield"));
+            String result = validator.validateForMainHand(WowClass.WARRIOR, weapon("Off-Hand", "Shield"));
             assertThat(result).isNotNull().contains("off-hand slot");
         }
 
         @Test
         @DisplayName("Held In Off-hand item is rejected from main hand")
         void heldInOffhandRejected() {
-            String result = validator.validateForMainHand(WowClass.MAGE, weapon("Offhand", "Held In Off-hand"));
+            String result = validator.validateForMainHand(WowClass.MAGE, weapon("Off-Hand", "Held In Off-hand"));
             assertThat(result).isNotNull().contains("off-hand slot");
         }
 
@@ -356,39 +356,39 @@ class GearValidatorTest {
         @Test
         @DisplayName("Shield is accepted by Paladin")
         void shieldForPaladin() {
-            assertThat(validator.validateForOffHand(WowClass.PALADIN, weapon("Offhand", "Shield"))).isNull();
+            assertThat(validator.validateForOffHand(WowClass.PALADIN, weapon("Off-Hand", "Shield"))).isNull();
         }
 
         @Test
         @DisplayName("Shield is accepted by Warrior")
         void shieldForWarrior() {
-            assertThat(validator.validateForOffHand(WowClass.WARRIOR, weapon("Offhand", "Shield"))).isNull();
+            assertThat(validator.validateForOffHand(WowClass.WARRIOR, weapon("Off-Hand", "Shield"))).isNull();
         }
 
         @Test
         @DisplayName("Shield is accepted by Shaman")
         void shieldForShaman() {
-            assertThat(validator.validateForOffHand(WowClass.SHAMAN, weapon("Offhand", "Shield"))).isNull();
+            assertThat(validator.validateForOffHand(WowClass.SHAMAN, weapon("Off-Hand", "Shield"))).isNull();
         }
 
         @Test
         @DisplayName("Shield is rejected by Demon Hunter")
         void shieldRejectedForDH() {
-            String result = validator.validateForOffHand(WowClass.DEMON_HUNTER, weapon("Offhand", "Shield"));
+            String result = validator.validateForOffHand(WowClass.DEMON_HUNTER, weapon("Off-Hand", "Shield"));
             assertThat(result).isNotNull().contains("cannot use shields");
         }
 
         @Test
         @DisplayName("Shield is rejected by Mage")
         void shieldRejectedForMage() {
-            String result = validator.validateForOffHand(WowClass.MAGE, weapon("Offhand", "Shield"));
+            String result = validator.validateForOffHand(WowClass.MAGE, weapon("Off-Hand", "Shield"));
             assertThat(result).isNotNull().contains("cannot use shields");
         }
 
         @Test
         @DisplayName("Held In Off-hand is accepted by Mage")
         void frillForMage() {
-            assertThat(validator.validateForOffHand(WowClass.MAGE, weapon("Offhand", "Held In Off-hand"))).isNull();
+            assertThat(validator.validateForOffHand(WowClass.MAGE, weapon("Off-Hand", "Held In Off-hand"))).isNull();
         }
 
         @Test
@@ -397,7 +397,7 @@ class GearValidatorTest {
             for (WowClass wc : new WowClass[]{
                     WowClass.DRUID, WowClass.EVOKER, WowClass.MAGE,
                     WowClass.PRIEST, WowClass.WARLOCK}) {
-                assertThat(validator.validateForOffHand(wc, weapon("Offhand", "Held In Off-hand")))
+                assertThat(validator.validateForOffHand(wc, weapon("Off-Hand", "Held In Off-hand")))
                         .as("%s should use Held In Off-hand", wc)
                         .isNull();
             }
@@ -406,14 +406,14 @@ class GearValidatorTest {
         @Test
         @DisplayName("Held In Off-hand is rejected by Rogue (dual-wield, not frill)")
         void frillRejectedForRogue() {
-            String result = validator.validateForOffHand(WowClass.ROGUE, weapon("Offhand", "Held In Off-hand"));
+            String result = validator.validateForOffHand(WowClass.ROGUE, weapon("Off-Hand", "Held In Off-hand"));
             assertThat(result).isNotNull().contains("cannot use off-hand frill");
         }
 
         @Test
         @DisplayName("Held In Off-hand is rejected by Warrior")
         void frillRejectedForWarrior() {
-            String result = validator.validateForOffHand(WowClass.WARRIOR, weapon("Offhand", "Held In Off-hand"));
+            String result = validator.validateForOffHand(WowClass.WARRIOR, weapon("Off-Hand", "Held In Off-hand"));
             assertThat(result).isNotNull().contains("cannot use off-hand frill");
         }
 
@@ -465,9 +465,9 @@ class GearValidatorTest {
         }
 
         @Test
-        @DisplayName("Unknown Offhand item type returns an error message")
+        @DisplayName("Unknown Off-Hand item type returns an error message")
         void unknownOffhandItemType() {
-            String result = validator.validateForOffHand(WowClass.WARRIOR, weapon("Offhand", "Mystery Item"));
+            String result = validator.validateForOffHand(WowClass.WARRIOR, weapon("Off-Hand", "Mystery Item"));
             assertThat(result).isNotNull().contains("Unknown off-hand item type");
         }
     }
