@@ -89,7 +89,7 @@ public class CharacterService {
         return characterMapper.toCharacterDTO(character, equipment);
     }
 
-    public EquipResponseDTO equipGear(String name, EquipRequest request) {
+    public CharacterDTO equipGear(String name, EquipRequest request) {
         WowCharacter character = findCharacter(name);
         WowClass wowClass = character.getCharacterClass();
         List<EquipSlotRequest> slotRequests = request.slots();
@@ -134,7 +134,40 @@ public class CharacterService {
             throw new GearValidationException("Armor type not allowed for this class", armorRejections);
         }
 
-        // Step 3: Weapon validation.
+        // Step 3: Uniqueness check for rings and trinkets.
+        // The same item cannot occupy both slots of a paired group simultaneously.
+        List<RejectedSlotDTO> uniquenessRejections = new ArrayList<>();
+        List<List<EquipmentSlot>> pairedSlotGroups = List.of(
+                List.of(EquipmentSlot.FINGER_1, EquipmentSlot.FINGER_2),
+                List.of(EquipmentSlot.TRINKET_1, EquipmentSlot.TRINKET_2)
+        );
+        for (List<EquipmentSlot> pair : pairedSlotGroups) {
+            EquipmentSlot slotA = pair.get(0);
+            EquipmentSlot slotB = pair.get(1);
+            boolean aInRequest = foundArmor.containsKey(slotA);
+            boolean bInRequest = foundArmor.containsKey(slotB);
+            if (!aInRequest && !bInRequest) continue;
+
+            String nameA = aInRequest ? foundArmor.get(slotA).getName()
+                    : equipmentRepository.findByWowCharacterAndSlot(character, slotA)
+                            .map(ce -> ce.getArmorPiece() != null ? ce.getArmorPiece().getName() : null)
+                            .orElse(null);
+            String nameB = bInRequest ? foundArmor.get(slotB).getName()
+                    : equipmentRepository.findByWowCharacterAndSlot(character, slotB)
+                            .map(ce -> ce.getArmorPiece() != null ? ce.getArmorPiece().getName() : null)
+                            .orElse(null);
+
+            if (nameA != null && nameA.equalsIgnoreCase(nameB)) {
+                String msg = "\"" + nameA + "\" is already equipped another slot";
+                if (aInRequest) uniquenessRejections.add(new RejectedSlotDTO(slotA, msg));
+                if (bInRequest) uniquenessRejections.add(new RejectedSlotDTO(slotB, msg));
+            }
+        }
+        if (!uniquenessRejections.isEmpty()) {
+            throw new GearValidationException("Duplicate unique item", uniquenessRejections);
+        }
+
+        // Step 4: Weapon validation (cross-checks the effective main-hand against off-hand).
         // First, determine the effective main-hand: what the character currently has equipped
         // (or what's being newly equipped), used to catch the 2H + off-hand conflict.
         boolean requestHasOffHand = slotRequests.stream()
@@ -172,17 +205,13 @@ public class CharacterService {
             throw new GearValidationException("Weapon not allowed for this class", weaponRejections);
         }
 
-        // Step 4: All validations passed — persist equipment.
-        List<EquipmentSlot> equipped = new ArrayList<>();
-
+        // Step 5: All validations passed — persist equipment.
         for (Map.Entry<EquipmentSlot, ArmorPiece> entry : foundArmor.entrySet()) {
             upsertEquipment(character, entry.getKey(), ItemType.ARMOR, entry.getValue(), null);
-            equipped.add(entry.getKey());
         }
 
         for (Map.Entry<EquipmentSlot, Weapon> entry : foundWeapons.entrySet()) {
             upsertEquipment(character, entry.getKey(), ItemType.WEAPON, null, entry.getValue());
-            equipped.add(entry.getKey());
             // Equipping a 2H or ranged weapon clears the off-hand slot
             if (entry.getKey() == EquipmentSlot.MAIN_HAND
                     && gearValidator.isTwoHandedOrRanged(entry.getValue())) {
@@ -191,7 +220,7 @@ public class CharacterService {
         }
 
         List<CharacterEquipment> allEquipment = equipmentRepository.findByWowCharacter(character);
-        return new EquipResponseDTO(characterMapper.toCharacterDTO(character, allEquipment), equipped, notFound);
+        return characterMapper.toCharacterDTO(character, allEquipment);
     }
 
     public CharacterDTO unequipGear(String name, UnequipRequest request) {

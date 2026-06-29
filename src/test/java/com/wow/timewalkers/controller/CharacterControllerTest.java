@@ -11,6 +11,8 @@ import com.wow.timewalkers.exception.GearValidationException;
 import com.wow.timewalkers.exception.GlobalExceptionHandler;
 import com.wow.timewalkers.exception.InvalidRaceClassCombinationException;
 import com.wow.timewalkers.service.CharacterService;
+import com.wow.timewalkers.service.CharacterValidator;
+import com.wow.timewalkers.service.GearPlanService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,8 +23,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -41,12 +46,18 @@ class CharacterControllerTest {
     @Mock
     private CharacterService characterService;
 
+    @Mock
+    private GearPlanService gearPlanService;
+
+    @Mock
+    private CharacterValidator characterValidator;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new CharacterController(characterService))
+                .standaloneSetup(new CharacterController(characterService, gearPlanService, characterValidator))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -189,8 +200,7 @@ class CharacterControllerTest {
     @DisplayName("PATCH /api/characters/{name}/gear returns 200 on success")
     void equipGearReturns200() throws Exception {
         CharacterDTO charDto = emptyCharacterDTO();
-        EquipResponseDTO response = new EquipResponseDTO(charDto, List.of(EquipmentSlot.HEAD), List.of());
-        when(characterService.equipGear(eq("jaraxxus"), any())).thenReturn(response);
+        when(characterService.equipGear(eq("jaraxxus"), any())).thenReturn(charDto);
 
         mockMvc.perform(patch("/api/characters/jaraxxus/gear")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -202,9 +212,8 @@ class CharacterControllerTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.character.name").value("JARAXXUS"))
-                .andExpect(jsonPath("$.equipped[0]").value("HEAD"))
-                .andExpect(jsonPath("$.notFound").isArray());
+                .andExpect(jsonPath("$.name").value("JARAXXUS"))
+                .andExpect(jsonPath("$.equipment").isArray());
     }
 
     @Test
@@ -284,5 +293,71 @@ class CharacterControllerTest {
                                 }
                                 """))
                 .andExpect(status().isNotFound());
+    }
+
+    // -----------------------------------------------------------------------
+    // GET /api/characters/{name}/gear-plan
+    // -----------------------------------------------------------------------
+
+    @Test
+    @DisplayName("GET /api/characters/{name}/gear-plan returns 200 with plan response")
+    void getGearPlanReturns200() throws Exception {
+        GearPlanResponseDTO plan = new GearPlanResponseDTO(
+                "JARAXXUS", "Agility", false, null,
+                List.of("HEAD"), List.of("CHEST"), List.of(), List.of());
+        when(gearPlanService.computeGearPlan(eq("jaraxxus"), eq(null))).thenReturn(plan);
+
+        mockMvc.perform(get("/api/characters/jaraxxus/gear-plan"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.characterName").value("JARAXXUS"))
+                .andExpect(jsonPath("$.resolvedStat").value("Agility"))
+                .andExpect(jsonPath("$.fullyEquipped").value(false))
+                .andExpect(jsonPath("$.alreadyEquippedSlots[0]").value("HEAD"))
+                .andExpect(jsonPath("$.unresolvableSlots[0]").value("CHEST"))
+                .andExpect(jsonPath("$.events").isArray())
+                .andExpect(jsonPath("$.statOptions").isArray());
+    }
+
+    @Test
+    @DisplayName("GET /api/characters/{name}/gear-plan forwards preferredStat query param to the service")
+    void getGearPlanForwardsPreferredStat() throws Exception {
+        GearPlanResponseDTO plan = new GearPlanResponseDTO(
+                "JARAXXUS", "Intellect", false, null,
+                List.of(), List.of(), List.of(), List.of("Agility", "Intellect"));
+        when(gearPlanService.computeGearPlan(eq("jaraxxus"), eq("Intellect"))).thenReturn(plan);
+
+        mockMvc.perform(get("/api/characters/jaraxxus/gear-plan").param("preferredStat", "Intellect"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resolvedStat").value("Intellect"))
+                .andExpect(jsonPath("$.statOptions[0]").value("Agility"))
+                .andExpect(jsonPath("$.statOptions[1]").value("Intellect"));
+    }
+
+    @Test
+    @DisplayName("GET /api/characters/{name}/gear-plan returns 404 when character not found")
+    void getGearPlanReturns404WhenCharacterMissing() throws Exception {
+        when(gearPlanService.computeGearPlan(eq("nobody"), eq(null)))
+                .thenThrow(new CharacterNotFoundException("No character found with name 'NOBODY'"));
+
+        mockMvc.perform(get("/api/characters/nobody/gear-plan"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("No character found with name 'NOBODY'"));
+    }
+
+    // -----------------------------------------------------------------------
+    // GET /api/characters/creation-info
+    // -----------------------------------------------------------------------
+
+    @Test
+    @DisplayName("GET /api/characters/creation-info returns 200 with race-class map")
+    void getCreationInfoReturns200() throws Exception {
+        Map<WowClass, List<WowRace>> raceClasses = new EnumMap<>(WowClass.class);
+        raceClasses.put(WowClass.DEMON_HUNTER, List.of(WowRace.NIGHT_ELF, WowRace.BLOOD_ELF, WowRace.VOID_ELF));
+        when(characterValidator.getAllValidCombinations()).thenReturn(raceClasses);
+
+        mockMvc.perform(get("/api/characters/creation-info"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.DEMON_HUNTER").isArray())
+                .andExpect(jsonPath("$.DEMON_HUNTER[0]").value("NIGHT_ELF"));
     }
 }

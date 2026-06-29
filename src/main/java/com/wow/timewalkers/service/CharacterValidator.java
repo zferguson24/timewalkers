@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -69,6 +70,15 @@ public class CharacterValidator {
         VALID_COMBINATIONS.put(WowClass.WARLOCK, EnumSet.copyOf(allRaces));
 
         VALID_COMBINATIONS.put(WowClass.WARRIOR, EnumSet.copyOf(allRaces));
+    }
+
+    public Map<WowClass, List<WowRace>> getAllValidCombinations() {
+        Map<WowClass, List<WowRace>> result = new EnumMap<>(WowClass.class);
+        for (WowClass cls : WowClass.values()) {
+            Set<WowRace> races = VALID_COMBINATIONS.get(cls);
+            if (races != null) result.put(cls, List.copyOf(races));
+        }
+        return result;
     }
 
     public void validateRaceClassCombination(WowRace race, WowClass wowClass) {

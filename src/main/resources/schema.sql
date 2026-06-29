@@ -52,3 +52,17 @@ CREATE TABLE IF NOT EXISTS character_equipment (
 );
 
 CREATE INDEX IF NOT EXISTS idx_char_equipment_character ON character_equipment(character_id);
+
+-- Timewalking event schedule, populated by the TimewalkingSponge addon + sync script.
+-- expansion must match the values used in armor_pieces.expansion and weapons.expansion.
+CREATE TABLE IF NOT EXISTS timewalking_events (
+    id                    BIGSERIAL    PRIMARY KEY,
+    expansion             VARCHAR(100) NOT NULL,
+    start_date            DATE         NOT NULL,
+    end_date              DATE         NOT NULL,
+    is_turbulent_timeways BOOLEAN      NOT NULL DEFAULT FALSE,
+    CONSTRAINT uq_timewalking_event UNIQUE (expansion, start_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tw_events_expansion   ON timewalking_events(expansion);
+CREATE INDEX IF NOT EXISTS idx_tw_events_start_date  ON timewalking_events(start_date);

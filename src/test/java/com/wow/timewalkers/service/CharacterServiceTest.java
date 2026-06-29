@@ -272,23 +272,22 @@ class CharacterServiceTest {
     class EquipGear {
 
         @Test
-        @DisplayName("Item not found in DB goes into notFound list and is not saved")
-        void itemNotFoundGoesIntoNotFoundList() {
+        @DisplayName("Item not found in DB is not saved and character is returned unchanged")
+        void itemNotFoundInDbIsNotSaved() {
             WowCharacter c = character(WowClass.DEMON_HUNTER);
             when(characterRepository.findByName("JARAXXUS")).thenReturn(Optional.of(c));
             when(armorPieceRepository.findByNameIgnoreCase("Ghost Helm")).thenReturn(Optional.empty());
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
+            CharacterDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(slotRequest(EquipmentSlot.HEAD, "Ghost Helm"))));
 
-            assertThat(result.notFound()).containsExactly(EquipmentSlot.HEAD);
-            assertThat(result.equipped()).isEmpty();
+            assertThat(result.name()).isEqualTo("JARAXXUS");
             verify(equipmentRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("Valid armor for class is equipped and slot appears in equipped list")
+        @DisplayName("Valid armor for class is saved and character is returned")
         void validArmorIsEquipped() {
             WowCharacter c = character(WowClass.DEMON_HUNTER);
             ArmorPiece leatherHelm = armorPiece("Leather Helm", "Leather");
@@ -301,11 +300,11 @@ class CharacterServiceTest {
             when(equipmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
+            CharacterDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(slotRequest(EquipmentSlot.HEAD, "Leather Helm"))));
 
-            assertThat(result.equipped()).containsExactly(EquipmentSlot.HEAD);
-            assertThat(result.notFound()).isEmpty();
+            assertThat(result.name()).isEqualTo("JARAXXUS");
+            verify(equipmentRepository).save(any());
         }
 
         @Test
@@ -348,14 +347,17 @@ class CharacterServiceTest {
             when(characterRepository.findByName("JARAXXUS")).thenReturn(Optional.of(c));
             when(armorPieceRepository.findByNameIgnoreCase("Mightstone Ring")).thenReturn(Optional.of(ring));
             when(equipmentRepository.findByWowCharacterAndSlot(c, EquipmentSlot.MAIN_HAND)).thenReturn(Optional.empty());
+            // Uniqueness check reads the other paired slot (FINGER_2) to detect duplicate unique items
+            when(equipmentRepository.findByWowCharacterAndSlot(c, EquipmentSlot.FINGER_2)).thenReturn(Optional.empty());
             when(equipmentRepository.findByWowCharacterAndSlot(c, EquipmentSlot.FINGER_1)).thenReturn(Optional.empty());
             when(equipmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
+            CharacterDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(slotRequest(EquipmentSlot.FINGER_1, "Mightstone Ring"))));
 
-            assertThat(result.equipped()).containsExactly(EquipmentSlot.FINGER_1);
+            assertThat(result.name()).isEqualTo("JARAXXUS");
+            verify(equipmentRepository).save(any());
         }
 
         @Test
@@ -370,10 +372,11 @@ class CharacterServiceTest {
             when(equipmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
+            CharacterDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(slotRequest(EquipmentSlot.MAIN_HAND, "Axe of Azzinoth"))));
 
-            assertThat(result.equipped()).containsExactly(EquipmentSlot.MAIN_HAND);
+            assertThat(result.name()).isEqualTo("JARAXXUS");
+            verify(equipmentRepository).save(any());
         }
 
         @Test
@@ -509,10 +512,11 @@ class CharacterServiceTest {
             when(equipmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
+            CharacterDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(slotRequest(EquipmentSlot.OFF_HAND, "Poisoned Dagger"))));
 
-            assertThat(result.equipped()).containsExactly(EquipmentSlot.OFF_HAND);
+            assertThat(result.name()).isEqualTo("JARAXXUS");
+            verify(equipmentRepository).save(any());
         }
 
         @Test
@@ -528,10 +532,11 @@ class CharacterServiceTest {
             when(equipmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
+            CharacterDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(slotRequest(EquipmentSlot.OFF_HAND, "Holy Shield"))));
 
-            assertThat(result.equipped()).containsExactly(EquipmentSlot.OFF_HAND);
+            assertThat(result.name()).isEqualTo("JARAXXUS");
+            verify(equipmentRepository).save(any());
         }
 
         @Test
@@ -561,10 +566,11 @@ class CharacterServiceTest {
             when(equipmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
+            CharacterDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(slotRequest(EquipmentSlot.OFF_HAND, "Tome of Arcane Power"))));
 
-            assertThat(result.equipped()).containsExactly(EquipmentSlot.OFF_HAND);
+            assertThat(result.name()).isEqualTo("JARAXXUS");
+            verify(equipmentRepository).save(any());
         }
 
         @Test
@@ -581,13 +587,14 @@ class CharacterServiceTest {
             when(equipmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
+            CharacterDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(
                             slotRequest(EquipmentSlot.HEAD, "Leather Helm"),
                             slotRequest(EquipmentSlot.CHEST, "Nonexistent Chest"))));
 
-            assertThat(result.equipped()).containsExactly(EquipmentSlot.HEAD);
-            assertThat(result.notFound()).containsExactly(EquipmentSlot.CHEST);
+            assertThat(result.name()).isEqualTo("JARAXXUS");
+            // HEAD was found and saved; CHEST was not found so save is called exactly once
+            verify(equipmentRepository, times(1)).save(any());
         }
 
         @Test
