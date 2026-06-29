@@ -69,6 +69,10 @@ public class GearValidator {
         TWO_HANDED_FORBIDDEN_CLASSES = Set.of(WowClass.DEMON_HUNTER, WowClass.ROGUE);
     }
 
+    public String getArmorType(WowClass wowClass) {
+        return ARMOR_TYPE_BY_CLASS.get(wowClass);
+    }
+
     // "Agnostic" items (rings, trinkets, neck, cloak) can be worn by any class
     public boolean isArmorTypeAllowed(WowClass wowClass, String armorType) {
         if ("Agnostic".equals(armorType)) return true;

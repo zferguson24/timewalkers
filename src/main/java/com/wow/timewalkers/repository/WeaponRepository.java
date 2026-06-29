@@ -26,4 +26,9 @@ public interface WeaponRepository extends JpaRepository<Weapon, Long> {
 
     // findByWeaponSlotContainingIgnoreCase -> WHERE LOWER(weapon_slot) LIKE LOWER('%?%')
     List<Weapon> findByWeaponSlotContainingIgnoreCase(String weaponSlot);
+
+    // Exact-match expansion lookup — used by GearPlanService to check which weapons
+    // an upcoming event offers. Expansion names match exactly between tables so no
+    // case-insensitive partial match is needed.
+    List<Weapon> findByExpansion(String expansion);
 }
