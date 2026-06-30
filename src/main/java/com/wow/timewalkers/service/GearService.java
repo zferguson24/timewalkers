@@ -9,6 +9,8 @@ import com.wow.timewalkers.entity.Weapon;
 import com.wow.timewalkers.mapper.GearMapper;
 import com.wow.timewalkers.repository.ArmorPieceRepository;
 import com.wow.timewalkers.repository.WeaponRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -21,6 +23,8 @@ import java.util.Map;
 // this layer contains business logic and sits between the controller and repository.
 @Service
 public class GearService {
+
+    private static final Logger log = LoggerFactory.getLogger(GearService.class);
 
     private final ArmorPieceRepository armorPieceRepository;
     private final WeaponRepository weaponRepository;
@@ -38,6 +42,7 @@ public class GearService {
     // The stream + map pattern converts each entity to a DTO before returning,
     // keeping JPA entities out of the API response.
     public List<ArmorPieceDTO> getAllArmorPieces() {
+        log.debug("Fetching all armor pieces");
         return armorPieceRepository.findAll()
                 .stream()
                 .map(gearMapper::toArmorPieceDTO)
@@ -45,6 +50,7 @@ public class GearService {
     }
 
     public List<WeaponDTO> getAllWeapons() {
+        log.debug("Fetching all weapons");
         return weaponRepository.findAll()
                 .stream()
                 .map(gearMapper::toWeaponDTO)
@@ -54,6 +60,7 @@ public class GearService {
     // Spring Data derives the SQL query from the method name:
     // findByNameContainingIgnoreCase -> WHERE LOWER(name) LIKE LOWER('%?%')
     public List<ArmorPieceDTO> getArmorPiecesByName(String name) {
+        log.debug("Armor search by name: {}", name);
         return armorPieceRepository.findByNameContainingIgnoreCase(name)
                 .stream()
                 .map(gearMapper::toArmorPieceDTO)
@@ -61,6 +68,7 @@ public class GearService {
     }
 
     public List<WeaponDTO> getWeaponsByName(String name) {
+        log.debug("Weapon search by name: {}", name);
         return weaponRepository.findByNameContainingIgnoreCase(name)
                 .stream()
                 .map(gearMapper::toWeaponDTO)
@@ -69,6 +77,7 @@ public class GearService {
 
     // Fires two independent partial-match queries and combines results into a single DTO
     public ExpansionGearDTO getGearByExpansion(String expansion) {
+        log.debug("Gear search by expansion: {}", expansion);
         List<ArmorPieceDTO> armor = armorPieceRepository.findByExpansionContainingIgnoreCase(expansion)
                 .stream()
                 .map(gearMapper::toArmorPieceDTO)
@@ -84,6 +93,7 @@ public class GearService {
 
     // findByArmorTypeContainingIgnoreCase -> WHERE LOWER(armor_type) LIKE LOWER('%?%')
     public List<ArmorPieceDTO> getArmorPiecesByType(String armorType) {
+        log.debug("Armor search by type: {}", armorType);
         return armorPieceRepository.findByArmorTypeContainingIgnoreCase(armorType)
                 .stream()
                 .map(gearMapper::toArmorPieceDTO)
@@ -92,6 +102,7 @@ public class GearService {
 
     // findByWeaponTypeContainingIgnoreCase -> WHERE LOWER(weapon_type) LIKE LOWER('%?%')
     public List<WeaponDTO> getWeaponsByType(String weaponType) {
+        log.debug("Weapon search by type: {}", weaponType);
         return weaponRepository.findByWeaponTypeContainingIgnoreCase(weaponType)
                 .stream()
                 .map(gearMapper::toWeaponDTO)
@@ -102,6 +113,7 @@ public class GearService {
     // Results are deduplicated by item name (names are unique in the dataset) and sorted
     // alphabetically before mapping to DTOs.
     public GearSearchResultDTO searchGear(String query) {
+        log.debug("Unified gear search: q={}", query);
         Map<String, ArmorPiece> armorByName = new LinkedHashMap<>();
         Map<String, Weapon> weaponByName = new LinkedHashMap<>();
 
@@ -135,6 +147,7 @@ public class GearService {
                 .map(gearMapper::toWeaponDTO)
                 .toList();
 
+        log.debug("Unified gear search results: {} armor, {} weapons", armor.size(), weapons.size());
         return new GearSearchResultDTO(armor, weapons);
     }
 }

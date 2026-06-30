@@ -16,6 +16,8 @@ import com.wow.timewalkers.repository.ArmorPieceRepository;
 import com.wow.timewalkers.repository.CharacterEquipmentRepository;
 import com.wow.timewalkers.repository.CharacterRepository;
 import com.wow.timewalkers.repository.WeaponRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,8 @@ import java.util.Map;
 @Service
 @Transactional
 public class CharacterService {
+
+    private static final Logger log = LoggerFactory.getLogger(CharacterService.class);
 
     private final CharacterRepository characterRepository;
     private final CharacterEquipmentRepository equipmentRepository;
@@ -59,6 +63,7 @@ public class CharacterService {
         characterValidator.validateRaceClassCombination(request.race(), request.characterClass());
         // Normalize name to uppercase before any DB interaction
         String name = request.name().toUpperCase();
+        log.debug("Creating character: name={}, race={}, class={}", name, request.race(), request.characterClass());
         if (characterRepository.existsByName(name)) {
             throw new CharacterNameConflictException("A character named '" + name + "' already exists");
         }
@@ -70,22 +75,27 @@ public class CharacterService {
         // save() either inserts (new entity) or updates (existing entity with an id set).
         // It returns the managed entity with its generated id populated.
         characterRepository.save(character);
+        log.debug("Character created: {}", name);
         return characterMapper.toCharacterDTO(character, List.of());
     }
 
     @Transactional(readOnly = true)
     public List<CharacterSummaryDTO> getAllCharacters() {
-        return characterRepository.findAll().stream()
+        List<CharacterSummaryDTO> result = characterRepository.findAll().stream()
                 .map(c -> new CharacterSummaryDTO(c.getName(), c.getRace(), c.getCharacterClass(), c.getGender()))
                 .toList();
+        log.debug("Fetched {} characters", result.size());
+        return result;
     }
 
     // readOnly = true is a performance hint to the JPA provider — Hibernate can skip
     // dirty-checking (detecting changed fields) since no writes will occur.
     @Transactional(readOnly = true)
     public CharacterDTO getCharacter(String name) {
+        log.debug("Fetching character: {}", name.toUpperCase());
         WowCharacter character = findCharacter(name);
         List<CharacterEquipment> equipment = equipmentRepository.findByWowCharacter(character);
+        log.debug("Character {} found — {} equipment slots loaded", character.getName(), equipment.size());
         return characterMapper.toCharacterDTO(character, equipment);
     }
 
@@ -100,6 +110,7 @@ public class CharacterService {
         Map<EquipmentSlot, ArmorPiece> foundArmor = new LinkedHashMap<>();
         Map<EquipmentSlot, Weapon> foundWeapons = new LinkedHashMap<>();
         List<EquipmentSlot> notFound = new ArrayList<>();
+        List<String> notFoundNames = new ArrayList<>();
 
         for (EquipSlotRequest sr : slotRequests) {
             EquipmentSlot slot = sr.slot();
@@ -109,14 +120,17 @@ public class CharacterService {
                 armorPieceRepository.findByNameIgnoreCase(sr.itemName())
                         .ifPresentOrElse(
                                 ap -> foundArmor.put(slot, ap),
-                                () -> notFound.add(slot));
+                                () -> { notFound.add(slot); notFoundNames.add(sr.itemName()); });
             } else {
                 weaponRepository.findByNameIgnoreCase(sr.itemName())
                         .ifPresentOrElse(
                                 w -> foundWeapons.put(slot, w),
-                                () -> notFound.add(slot));
+                                () -> { notFound.add(slot); notFoundNames.add(sr.itemName()); });
             }
         }
+        log.debug("equipGear [{}] step 1 — {} armor found, {} weapons found, {} items not found{}",
+                name, foundArmor.size(), foundWeapons.size(), notFound.size(),
+                notFoundNames.isEmpty() ? "" : ": " + notFoundNames);
 
         // Step 2: Armor type validation — reject the whole request if any found armor
         // item is the wrong type for this character's class (e.g. Plate on a Mage).
@@ -133,6 +147,7 @@ public class CharacterService {
             // GlobalExceptionHandler catches this and returns a 400 response.
             throw new GearValidationException("Armor type not allowed for this class", armorRejections);
         }
+        log.debug("equipGear [{}] step 2 — armor type validation passed", name);
 
         // Step 3: Uniqueness check for rings and trinkets.
         // The same item cannot occupy both slots of a paired group simultaneously.
@@ -166,6 +181,7 @@ public class CharacterService {
         if (!uniquenessRejections.isEmpty()) {
             throw new GearValidationException("Duplicate unique item", uniquenessRejections);
         }
+        log.debug("equipGear [{}] step 3 — uniqueness check passed", name);
 
         // Step 4: Weapon validation (cross-checks the effective main-hand against off-hand).
         // First, determine the effective main-hand: what the character currently has equipped
@@ -204,6 +220,7 @@ public class CharacterService {
         if (!weaponRejections.isEmpty()) {
             throw new GearValidationException("Weapon not allowed for this class", weaponRejections);
         }
+        log.debug("equipGear [{}] step 4 — weapon validation passed", name);
 
         // Step 5: All validations passed — persist equipment.
         for (Map.Entry<EquipmentSlot, ArmorPiece> entry : foundArmor.entrySet()) {
@@ -218,12 +235,14 @@ public class CharacterService {
                 equipmentRepository.deleteByWowCharacterAndSlotIn(character, List.of(EquipmentSlot.OFF_HAND));
             }
         }
+        log.debug("equipGear [{}] step 5 — persisted {} armor, {} weapons", name, foundArmor.size(), foundWeapons.size());
 
         List<CharacterEquipment> allEquipment = equipmentRepository.findByWowCharacter(character);
         return characterMapper.toCharacterDTO(character, allEquipment);
     }
 
     public CharacterDTO unequipGear(String name, UnequipRequest request) {
+        log.debug("Unequipping {} slots from {}", request.slots().size(), name.toUpperCase());
         WowCharacter character = findCharacter(name);
         equipmentRepository.deleteByWowCharacterAndSlotIn(character, request.slots());
         List<CharacterEquipment> allEquipment = equipmentRepository.findByWowCharacter(character);

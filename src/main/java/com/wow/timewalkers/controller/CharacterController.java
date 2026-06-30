@@ -6,6 +6,8 @@ import com.wow.timewalkers.enums.WowRace;
 import com.wow.timewalkers.service.CharacterService;
 import com.wow.timewalkers.service.CharacterValidator;
 import com.wow.timewalkers.service.GearPlanService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +17,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/characters")
 public class CharacterController {
+
+    private static final Logger log = LoggerFactory.getLogger(CharacterController.class);
 
     private final CharacterService characterService;
     private final GearPlanService gearPlanService;
@@ -31,12 +35,14 @@ public class CharacterController {
     // Fetched in parallel with the character list on the characters screen.
     @GetMapping("/creation-info")
     public ResponseEntity<Map<WowClass, List<WowRace>>> getCreationInfo() {
+        log.debug("GET /api/characters/creation-info");
         return ResponseEntity.ok(characterValidator.getAllValidCombinations());
     }
 
     // GET /api/characters — list all characters (name, race, class only)
     @GetMapping
     public ResponseEntity<List<CharacterSummaryDTO>> getAllCharacters() {
+        log.debug("GET /api/characters");
         return ResponseEntity.ok(characterService.getAllCharacters());
     }
 
@@ -46,6 +52,7 @@ public class CharacterController {
     // Returns 201 Created instead of the default 200.
     @PostMapping
     public ResponseEntity<CharacterDTO> createCharacter(@RequestBody CreateCharacterRequest request) {
+        log.debug("POST /api/characters — name={}, race={}, class={}", request.name(), request.race(), request.characterClass());
         return ResponseEntity.status(201).body(characterService.createCharacter(request));
     }
 
@@ -53,6 +60,7 @@ public class CharacterController {
     // Name is transformed to uppercase in the service before querying.
     @GetMapping("/{name}")
     public ResponseEntity<CharacterDTO> getCharacter(@PathVariable String name) {
+        log.debug("GET /api/characters/{}", name);
         return ResponseEntity.ok(characterService.getCharacter(name));
     }
 
@@ -61,6 +69,7 @@ public class CharacterController {
     @PatchMapping("/{name}/gear")
     public ResponseEntity<CharacterDTO> equipGear(@PathVariable String name,
                                                    @RequestBody EquipRequest request) {
+        log.debug("PATCH /api/characters/{}/gear — {} slots requested", name, request.slots().size());
         return ResponseEntity.ok(characterService.equipGear(name, request));
     }
 
@@ -69,6 +78,7 @@ public class CharacterController {
     @DeleteMapping("/{name}/gear")
     public ResponseEntity<CharacterDTO> unequipGear(@PathVariable String name,
                                                      @RequestBody UnequipRequest request) {
+        log.debug("DELETE /api/characters/{}/gear — slots={}", name, request.slots());
         return ResponseEntity.ok(characterService.unequipGear(name, request));
     }
 
@@ -79,6 +89,7 @@ public class CharacterController {
     public ResponseEntity<GearPlanResponseDTO> getGearPlan(
             @PathVariable String name,
             @RequestParam(required = false) String preferredStat) {
+        log.debug("GET /api/characters/{}/gear-plan — preferredStat={}", name, preferredStat);
         return ResponseEntity.ok(gearPlanService.computeGearPlan(name, preferredStat));
     }
 }

@@ -16,6 +16,8 @@ import com.wow.timewalkers.repository.CharacterEquipmentRepository;
 import com.wow.timewalkers.repository.CharacterRepository;
 import com.wow.timewalkers.repository.TimewalkingEventRepository;
 import com.wow.timewalkers.repository.WeaponRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,8 @@ import java.util.stream.Stream;
 @Service
 @Transactional(readOnly = true)
 public class GearPlanService {
+
+    private static final Logger log = LoggerFactory.getLogger(GearPlanService.class);
 
     private static final List<EquipmentSlot> ALL_SLOTS = List.of(
             EquipmentSlot.HEAD, EquipmentSlot.NECK, EquipmentSlot.SHOULDERS, EquipmentSlot.BACK,
@@ -102,6 +106,8 @@ public class GearPlanService {
         WowClass wowClass = character.getCharacterClass();
         String armorType = gearValidator.getArmorType(wowClass);
         String resolvedStat = resolveEffectiveStat(wowClass, preferredStat);
+        log.debug("Computing gear plan for {} ({}) — preferredStat={}, resolvedStat={}",
+                character.getName(), wowClass, preferredStat, resolvedStat);
 
         List<CharacterEquipment> currentEquipment = equipmentRepository.findByWowCharacter(character);
         Set<EquipmentSlot> filledSlots = new HashSet<>();
@@ -127,6 +133,7 @@ public class GearPlanService {
                 unfilled.add(slot);
             }
         }
+        log.debug("Gear plan [{}] — {} slots filled, {} unfilled", character.getName(), filledSlots.size(), unfilled.size());
 
         List<String> alreadyEquipped = filledSlots.stream()
                 .map(EquipmentSlot::name)
@@ -136,6 +143,12 @@ public class GearPlanService {
         List<TimewalkingEvent> upcomingEvents = twEventRepository
                 .findByStartDateGreaterThanEqualOrderByStartDateAsc(LocalDate.now());
 
+        if (upcomingEvents.isEmpty()) {
+            log.error("No upcoming timewalking events found — timewalking_events table may be empty or unpopulated");
+        } else {
+            log.debug("Gear plan [{}] — {} upcoming events to evaluate", character.getName(), upcomingEvents.size());
+        }
+
         List<GearPlanEventDTO> planEvents = new ArrayList<>();
         int cumulativeFilled = filledSlots.size();
 
@@ -144,7 +157,14 @@ public class GearPlanService {
 
             Map<EquipmentSlot, GearPlanSlotDTO> covered = resolveCoveredSlots(
                     event.getExpansion(), wowClass, armorType, resolvedStat, unfilled, equippedItemNames);
-            if (covered.isEmpty()) continue;
+            if (covered.isEmpty()) {
+                log.debug("Gear plan [{}] — event '{}' ({}) covered 0 unfilled slots, skipping",
+                        character.getName(), event.getExpansion(), event.getStartDate());
+                continue;
+            }
+            log.debug("Gear plan [{}] — event '{}' ({}) covers {} slots: {}",
+                    character.getName(), event.getExpansion(), event.getStartDate(),
+                    covered.size(), covered.keySet());
 
             unfilled.removeAll(covered.keySet());
             cumulativeFilled += covered.size();
@@ -167,6 +187,7 @@ public class GearPlanService {
 
         List<String> unresolvable = unfilled.stream().map(EquipmentSlot::name).toList();
         boolean fullyEquipped = unresolvable.isEmpty();
+        log.debug("Gear plan [{}] — {} plan events generated; fully equipped: {}", character.getName(), planEvents.size(), fullyEquipped);
 
         LocalDate fullyEquippedDate = null;
         if (fullyEquipped) {
@@ -275,6 +296,7 @@ public class GearPlanService {
             if (mainHandCandidate == null && unfilled.contains(EquipmentSlot.MAIN_HAND)
                     && weaponMatchesStat(weapon, resolvedStat)
                     && !equippedItemNames.contains(weapon.getName().toLowerCase())
+                    && (wowClass != WowClass.HUNTER || "Ranged".equals(weapon.getWeaponSlot()))
                     && gearValidator.validateForMainHand(wowClass, weapon) == null) {
                 mainHandCandidate = weapon;
             }

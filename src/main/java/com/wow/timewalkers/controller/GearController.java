@@ -5,6 +5,8 @@ import com.wow.timewalkers.dto.ExpansionGearDTO;
 import com.wow.timewalkers.dto.GearSearchResultDTO;
 import com.wow.timewalkers.dto.WeaponDTO;
 import com.wow.timewalkers.service.GearService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +19,8 @@ import java.util.List;
 // @RequestMapping sets a base URL prefix for all endpoints in this class
 @RequestMapping("/api/gear")
 public class GearController {
+
+    private static final Logger log = LoggerFactory.getLogger(GearController.class);
 
     // Constructor injection — Spring sees a single constructor and injects the
     // GearService bean automatically. Preferred over field injection (@Autowired)
@@ -34,12 +38,14 @@ public class GearController {
     // GET /api/gear/armor — returns all armor pieces
     @GetMapping("/armor")
     public ResponseEntity<List<ArmorPieceDTO>> getAllArmor() {
+        log.debug("GET /api/gear/armor");
         return ResponseEntity.ok(gearService.getAllArmorPieces());
     }
 
     // GET /api/gear/weapons — returns all weapons
     @GetMapping("/weapons")
     public ResponseEntity<List<WeaponDTO>> getAllWeapons() {
+        log.debug("GET /api/gear/weapons");
         return ResponseEntity.ok(gearService.getAllWeapons());
     }
 
@@ -49,36 +55,42 @@ public class GearController {
     // GET /api/gear/armor/search?name=... — partial, case-insensitive name search
     @GetMapping("/armor/search")
     public ResponseEntity<List<ArmorPieceDTO>> searchArmor(@RequestParam String name) {
+        log.debug("GET /api/gear/armor/search — name={}", name);
         return ResponseEntity.ok(gearService.getArmorPiecesByName(name));
     }
 
     // GET /api/gear/weapons/search?name=... — partial, case-insensitive name search
     @GetMapping("/weapons/search")
     public ResponseEntity<List<WeaponDTO>> searchWeapons(@RequestParam String name) {
+        log.debug("GET /api/gear/weapons/search — name={}", name);
         return ResponseEntity.ok(gearService.getWeaponsByName(name));
     }
 
     // GET /api/gear/expansion?name=... — all armor + weapons for a given expansion
     @GetMapping("/expansion")
     public ResponseEntity<ExpansionGearDTO> getGearByExpansion(@RequestParam String name) {
+        log.debug("GET /api/gear/expansion — name={}", name);
         return ResponseEntity.ok(gearService.getGearByExpansion(name));
     }
 
     // GET /api/gear/armor/type?name=... — armor filtered by type (Plate, Mail, etc.)
     @GetMapping("/armor/type")
     public ResponseEntity<List<ArmorPieceDTO>> getArmorByType(@RequestParam String name) {
+        log.debug("GET /api/gear/armor/type — name={}", name);
         return ResponseEntity.ok(gearService.getArmorPiecesByType(name));
     }
 
     // GET /api/gear/weapons/type?name=... — weapons filtered by type (Sword, Axe, etc.)
     @GetMapping("/weapons/type")
     public ResponseEntity<List<WeaponDTO>> getWeaponsByType(@RequestParam String name) {
+        log.debug("GET /api/gear/weapons/type — name={}", name);
         return ResponseEntity.ok(gearService.getWeaponsByType(name));
     }
 
     // GET /api/gear/search?q=... — unified search across name, expansion, armor type, weapon type
     @GetMapping("/search")
     public ResponseEntity<GearSearchResultDTO> searchGear(@RequestParam String q) {
+        log.debug("GET /api/gear/search — q={}", q);
         return ResponseEntity.ok(gearService.searchGear(q));
     }
 }
