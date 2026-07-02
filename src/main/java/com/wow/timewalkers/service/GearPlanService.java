@@ -114,6 +114,8 @@ public class GearPlanService {
         Set<EquipmentSlot> filledSlots = new HashSet<>();
         Set<String> equippedItemNames = new HashSet<>();
         boolean mainHandIs2HOrRanged = false;
+        String equippedMainHandWeaponName = null;
+        String equippedOffHandWeaponName = null;
 
         for (CharacterEquipment ce : currentEquipment) {
             filledSlots.add(ce.getSlot());
@@ -121,9 +123,14 @@ public class GearPlanService {
                 equippedItemNames.add(ce.getArmorPiece().getName().toLowerCase());
             else if (ce.getWeapon() != null)
                 equippedItemNames.add(ce.getWeapon().getName().toLowerCase());
-            if (ce.getSlot() == EquipmentSlot.MAIN_HAND && ce.getWeapon() != null
-                    && gearValidator.isTwoHandedOrRanged(ce.getWeapon())) {
-                mainHandIs2HOrRanged = true;
+            if (ce.getSlot() == EquipmentSlot.MAIN_HAND && ce.getWeapon() != null) {
+                if (gearValidator.isTwoHandedOrRanged(ce.getWeapon())) {
+                    mainHandIs2HOrRanged = true;
+                }
+                equippedMainHandWeaponName = ce.getWeapon().getName().toLowerCase();
+            }
+            if (ce.getSlot() == EquipmentSlot.OFF_HAND && ce.getWeapon() != null) {
+                equippedOffHandWeaponName = ce.getWeapon().getName().toLowerCase();
             }
         }
 
@@ -157,7 +164,8 @@ public class GearPlanService {
             if (unfilled.isEmpty()) break;
 
             Map<EquipmentSlot, GearPlanSlotDTO> covered = resolveCoveredSlots(
-                    event.getExpansion(), wowClass, armorType, resolvedStat, unfilled, equippedItemNames);
+                    event.getExpansion(), wowClass, armorType, resolvedStat, unfilled, equippedItemNames,
+                    equippedMainHandWeaponName, equippedOffHandWeaponName);
             if (covered.isEmpty()) {
                 log.debug("Gear plan [{}] — event '{}' ({}) covered 0 unfilled slots, skipping",
                         character.getName(), event.getExpansion(), event.getStartDate());
@@ -240,7 +248,8 @@ public class GearPlanService {
 
     private Map<EquipmentSlot, GearPlanSlotDTO> resolveCoveredSlots(
             String expansion, WowClass wowClass, String armorType,
-            String resolvedStat, Set<EquipmentSlot> unfilled, Set<String> equippedItemNames) {
+            String resolvedStat, Set<EquipmentSlot> unfilled, Set<String> equippedItemNames,
+            String equippedMainHandWeaponName, String equippedOffHandWeaponName) {
 
         Map<EquipmentSlot, GearPlanSlotDTO> covered = new LinkedHashMap<>();
 
@@ -278,14 +287,14 @@ public class GearPlanService {
         for (Weapon weapon : weapons) {
             if (mainHandCandidate == null && unfilled.contains(EquipmentSlot.MAIN_HAND)
                     && weaponMatchesStat(weapon, resolvedStat)
-                    && !equippedItemNames.contains(weapon.getName().toLowerCase())
+                    && !weapon.getName().toLowerCase().equals(equippedMainHandWeaponName)
                     && (wowClass != WowClass.HUNTER || GearConstants.SLOT_RANGED.equals(weapon.getWeaponSlot()))
                     && gearValidator.validateForMainHand(wowClass, weapon) == null) {
                 mainHandCandidate = weapon;
             }
             if (offHandCandidate == null && unfilled.contains(EquipmentSlot.OFF_HAND)
                     && weaponMatchesStat(weapon, resolvedStat)
-                    && !equippedItemNames.contains(weapon.getName().toLowerCase())
+                    && !weapon.getName().toLowerCase().equals(equippedOffHandWeaponName)
                     && gearValidator.validateForOffHand(wowClass, weapon) == null) {
                 offHandCandidate = weapon;
             }
