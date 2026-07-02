@@ -66,9 +66,11 @@ public class CharacterController {
 
     // @PatchMapping handles HTTP PATCH — conventionally used for partial updates.
     // Only the slots listed in the request body are modified; others are left as-is.
+    // Returns { character, equipped, notFound } so partial applies (items whose
+    // names didn't resolve) are visible to the client.
     @PatchMapping("/{name}/gear")
-    public ResponseEntity<CharacterDTO> equipGear(@PathVariable String name,
-                                                   @RequestBody EquipRequest request) {
+    public ResponseEntity<EquipResponseDTO> equipGear(@PathVariable String name,
+                                                      @RequestBody EquipRequest request) {
         log.debug("PATCH /api/characters/{}/gear — {} slots requested", name, request.slots().size());
         return ResponseEntity.ok(characterService.equipGear(name, request));
     }

@@ -3,6 +3,7 @@ package com.wow.timewalkers.exception;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -50,6 +51,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidRaceClassCombinationException.class)
     public ResponseEntity<Map<String, String>> handleInvalidRaceClass(InvalidRaceClassCombinationException ex) {
         log.warn("Invalid race/class combination: {}", ex.getMessage());
+        return ResponseEntity.status(400).body(Map.of("message", ex.getMessage()));
+    }
+
+    // 400 Bad Request — a required @RequestParam was missing. Spring maps this to 400
+    // by default, but the catch-all Exception handler below would otherwise intercept
+    // it first and misreport it as a 500.
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, String>> handleMissingParam(MissingServletRequestParameterException ex) {
+        log.warn("Missing request parameter: {}", ex.getMessage());
         return ResponseEntity.status(400).body(Map.of("message", ex.getMessage()));
     }
 

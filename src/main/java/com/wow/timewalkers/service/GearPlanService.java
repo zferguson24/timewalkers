@@ -58,23 +58,24 @@ public class GearPlanService {
     private static final Map<WowClass, String> FIXED_STAT_BY_CLASS = new EnumMap<>(WowClass.class);
     // Hybrid classes support two stats; this is the default (their non-Intellect option).
     private static final Map<WowClass, String> DEFAULT_STAT_BY_CLASS = new EnumMap<>(WowClass.class);
-    private static final Set<String> VALID_STATS = Set.of("Strength", "Agility", "Intellect");
+    private static final Set<String> VALID_STATS = Set.of(
+            GearConstants.STAT_STRENGTH, GearConstants.STAT_AGILITY, GearConstants.STAT_INTELLECT);
 
     static {
-        FIXED_STAT_BY_CLASS.put(WowClass.DEATH_KNIGHT, "Strength");
-        FIXED_STAT_BY_CLASS.put(WowClass.WARRIOR,      "Strength");
-        FIXED_STAT_BY_CLASS.put(WowClass.DEMON_HUNTER, "Agility");
-        FIXED_STAT_BY_CLASS.put(WowClass.HUNTER,       "Agility");
-        FIXED_STAT_BY_CLASS.put(WowClass.ROGUE,        "Agility");
-        FIXED_STAT_BY_CLASS.put(WowClass.EVOKER,       "Intellect");
-        FIXED_STAT_BY_CLASS.put(WowClass.MAGE,         "Intellect");
-        FIXED_STAT_BY_CLASS.put(WowClass.PRIEST,       "Intellect");
-        FIXED_STAT_BY_CLASS.put(WowClass.WARLOCK,      "Intellect");
+        FIXED_STAT_BY_CLASS.put(WowClass.DEATH_KNIGHT, GearConstants.STAT_STRENGTH);
+        FIXED_STAT_BY_CLASS.put(WowClass.WARRIOR,      GearConstants.STAT_STRENGTH);
+        FIXED_STAT_BY_CLASS.put(WowClass.DEMON_HUNTER, GearConstants.STAT_AGILITY);
+        FIXED_STAT_BY_CLASS.put(WowClass.HUNTER,       GearConstants.STAT_AGILITY);
+        FIXED_STAT_BY_CLASS.put(WowClass.ROGUE,        GearConstants.STAT_AGILITY);
+        FIXED_STAT_BY_CLASS.put(WowClass.EVOKER,       GearConstants.STAT_INTELLECT);
+        FIXED_STAT_BY_CLASS.put(WowClass.MAGE,         GearConstants.STAT_INTELLECT);
+        FIXED_STAT_BY_CLASS.put(WowClass.PRIEST,       GearConstants.STAT_INTELLECT);
+        FIXED_STAT_BY_CLASS.put(WowClass.WARLOCK,      GearConstants.STAT_INTELLECT);
 
-        DEFAULT_STAT_BY_CLASS.put(WowClass.DRUID,   "Agility");
-        DEFAULT_STAT_BY_CLASS.put(WowClass.MONK,    "Agility");
-        DEFAULT_STAT_BY_CLASS.put(WowClass.SHAMAN,  "Agility");
-        DEFAULT_STAT_BY_CLASS.put(WowClass.PALADIN, "Strength");
+        DEFAULT_STAT_BY_CLASS.put(WowClass.DRUID,   GearConstants.STAT_AGILITY);
+        DEFAULT_STAT_BY_CLASS.put(WowClass.MONK,    GearConstants.STAT_AGILITY);
+        DEFAULT_STAT_BY_CLASS.put(WowClass.SHAMAN,  GearConstants.STAT_AGILITY);
+        DEFAULT_STAT_BY_CLASS.put(WowClass.PALADIN, GearConstants.STAT_STRENGTH);
     }
 
     private final CharacterRepository characterRepository;
@@ -211,7 +212,7 @@ public class GearPlanService {
     private List<String> computeStatOptions(WowClass wowClass) {
         String defaultStat = DEFAULT_STAT_BY_CLASS.get(wowClass);
         if (defaultStat == null) return List.of();
-        return List.of(defaultStat, "Intellect");
+        return List.of(defaultStat, GearConstants.STAT_INTELLECT);
     }
 
     // Returns the stat used to filter the gear plan. Pure classes always use their fixed stat.
@@ -223,36 +224,18 @@ public class GearPlanService {
         return DEFAULT_STAT_BY_CLASS.get(wowClass);
     }
 
-    // Returns true if the item's combined text fields contain a primary stat keyword that
-    // matches requiredStat, or if the item has no primary stat keyword at all (pure rating item).
-    // Items explicitly marked "No Primary Stat" are treated as universally compatible.
+    // Both matchers concatenate the item's stat-bearing text fields and delegate to
+    // GearValidator.hasCompatibleStatText — the single place that interprets the
+    // free-text stat convention (see the comment there for the rules).
     private boolean armorMatchesStat(ArmorPiece ap, String requiredStat) {
-        if (ap.getNotes() != null && ap.getNotes().contains("No Primary Stat")) return true;
-
         String combined = Stream.of(ap.getPrimaryStat(), ap.getSecondaryStat(), ap.getNotes())
                 .filter(Objects::nonNull)
-                .collect(java.util.stream.Collectors.joining(" "))
-                .toLowerCase();
-
-        boolean hasAnyPrimaryStat = combined.contains("strength")
-                || combined.contains("agility")
-                || combined.contains("intellect");
-        if (!hasAnyPrimaryStat) return true;
-
-        return combined.contains(requiredStat.toLowerCase());
+                .collect(java.util.stream.Collectors.joining(" "));
+        return gearValidator.hasCompatibleStatText(combined, requiredStat);
     }
 
-    // Returns true if the weapon's stat is compatible with requiredStat, or if the
-    // weapon has no stat designation at all.
     private boolean weaponMatchesStat(Weapon w, String requiredStat) {
-        String stat = w.getWeaponStat();
-        if (stat == null) return true;
-        String lower = stat.toLowerCase();
-        boolean hasAnyPrimaryStat = lower.contains("strength")
-                || lower.contains("agility")
-                || lower.contains("intellect");
-        if (!hasAnyPrimaryStat) return true;
-        return lower.contains(requiredStat.toLowerCase());
+        return gearValidator.hasCompatibleStatText(w.getWeaponStat(), requiredStat);
     }
 
     private Map<EquipmentSlot, GearPlanSlotDTO> resolveCoveredSlots(
@@ -262,7 +245,7 @@ public class GearPlanService {
         Map<EquipmentSlot, GearPlanSlotDTO> covered = new LinkedHashMap<>();
 
         List<String> armorSlots = armorPieceRepository.findDistinctSlotsByExpansionAndArmorTypes(
-                expansion, List.of(armorType, "Agnostic"));
+                expansion, List.of(armorType, GearConstants.ARMOR_AGNOSTIC));
 
         for (String dbSlot : armorSlots) {
             List<EquipmentSlot> mapped = ARMOR_SLOT_MAP.get(dbSlot);
@@ -274,7 +257,7 @@ public class GearPlanService {
             // Fetch all candidates for this slot, filter by primary stat compatibility,
             // then take only as many as there are unfilled slots to fill.
             List<ArmorPiece> candidates = armorPieceRepository
-                    .findByExpansionAndSlotAndArmorTypeIn(expansion, dbSlot, List.of(armorType, "Agnostic"))
+                    .findByExpansionAndSlotAndArmorTypeIn(expansion, dbSlot, List.of(armorType, GearConstants.ARMOR_AGNOSTIC))
                     .stream()
                     .filter(ap -> armorMatchesStat(ap, resolvedStat))
                     .filter(ap -> !equippedItemNames.contains(ap.getName().toLowerCase()))
@@ -296,7 +279,7 @@ public class GearPlanService {
             if (mainHandCandidate == null && unfilled.contains(EquipmentSlot.MAIN_HAND)
                     && weaponMatchesStat(weapon, resolvedStat)
                     && !equippedItemNames.contains(weapon.getName().toLowerCase())
-                    && (wowClass != WowClass.HUNTER || "Ranged".equals(weapon.getWeaponSlot()))
+                    && (wowClass != WowClass.HUNTER || GearConstants.SLOT_RANGED.equals(weapon.getWeaponSlot()))
                     && gearValidator.validateForMainHand(wowClass, weapon) == null) {
                 mainHandCandidate = weapon;
             }

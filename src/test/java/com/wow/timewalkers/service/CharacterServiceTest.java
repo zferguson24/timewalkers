@@ -279,10 +279,13 @@ class CharacterServiceTest {
             when(armorPieceRepository.findByNameIgnoreCase("Ghost Helm")).thenReturn(Optional.empty());
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            CharacterDTO result = characterService.equipGear("JARAXXUS",
+            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(slotRequest(EquipmentSlot.HEAD, "Ghost Helm"))));
 
-            assertThat(result.name()).isEqualTo("JARAXXUS");
+            assertThat(result.character().name()).isEqualTo("JARAXXUS");
+            assertThat(result.equipped()).isEmpty();
+            assertThat(result.notFound())
+                    .containsExactly(new NotFoundSlotDTO(EquipmentSlot.HEAD, "Ghost Helm"));
             verify(equipmentRepository, never()).save(any());
         }
 
@@ -300,10 +303,10 @@ class CharacterServiceTest {
             when(equipmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            CharacterDTO result = characterService.equipGear("JARAXXUS",
+            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(slotRequest(EquipmentSlot.HEAD, "Leather Helm"))));
 
-            assertThat(result.name()).isEqualTo("JARAXXUS");
+            assertThat(result.character().name()).isEqualTo("JARAXXUS");
             verify(equipmentRepository).save(any());
         }
 
@@ -353,10 +356,10 @@ class CharacterServiceTest {
             when(equipmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            CharacterDTO result = characterService.equipGear("JARAXXUS",
+            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(slotRequest(EquipmentSlot.FINGER_1, "Mightstone Ring"))));
 
-            assertThat(result.name()).isEqualTo("JARAXXUS");
+            assertThat(result.character().name()).isEqualTo("JARAXXUS");
             verify(equipmentRepository).save(any());
         }
 
@@ -372,10 +375,10 @@ class CharacterServiceTest {
             when(equipmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            CharacterDTO result = characterService.equipGear("JARAXXUS",
+            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(slotRequest(EquipmentSlot.MAIN_HAND, "Axe of Azzinoth"))));
 
-            assertThat(result.name()).isEqualTo("JARAXXUS");
+            assertThat(result.character().name()).isEqualTo("JARAXXUS");
             verify(equipmentRepository).save(any());
         }
 
@@ -512,10 +515,10 @@ class CharacterServiceTest {
             when(equipmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            CharacterDTO result = characterService.equipGear("JARAXXUS",
+            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(slotRequest(EquipmentSlot.OFF_HAND, "Poisoned Dagger"))));
 
-            assertThat(result.name()).isEqualTo("JARAXXUS");
+            assertThat(result.character().name()).isEqualTo("JARAXXUS");
             verify(equipmentRepository).save(any());
         }
 
@@ -532,10 +535,10 @@ class CharacterServiceTest {
             when(equipmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            CharacterDTO result = characterService.equipGear("JARAXXUS",
+            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(slotRequest(EquipmentSlot.OFF_HAND, "Holy Shield"))));
 
-            assertThat(result.name()).isEqualTo("JARAXXUS");
+            assertThat(result.character().name()).isEqualTo("JARAXXUS");
             verify(equipmentRepository).save(any());
         }
 
@@ -566,10 +569,10 @@ class CharacterServiceTest {
             when(equipmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            CharacterDTO result = characterService.equipGear("JARAXXUS",
+            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(slotRequest(EquipmentSlot.OFF_HAND, "Tome of Arcane Power"))));
 
-            assertThat(result.name()).isEqualTo("JARAXXUS");
+            assertThat(result.character().name()).isEqualTo("JARAXXUS");
             verify(equipmentRepository).save(any());
         }
 
@@ -587,12 +590,15 @@ class CharacterServiceTest {
             when(equipmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(equipmentRepository.findByWowCharacter(c)).thenReturn(List.of());
 
-            CharacterDTO result = characterService.equipGear("JARAXXUS",
+            EquipResponseDTO result = characterService.equipGear("JARAXXUS",
                     new EquipRequest(List.of(
                             slotRequest(EquipmentSlot.HEAD, "Leather Helm"),
                             slotRequest(EquipmentSlot.CHEST, "Nonexistent Chest"))));
 
-            assertThat(result.name()).isEqualTo("JARAXXUS");
+            assertThat(result.character().name()).isEqualTo("JARAXXUS");
+            assertThat(result.equipped()).containsExactly(EquipmentSlot.HEAD);
+            assertThat(result.notFound())
+                    .containsExactly(new NotFoundSlotDTO(EquipmentSlot.CHEST, "Nonexistent Chest"));
             // HEAD was found and saved; CHEST was not found so save is called exactly once
             verify(equipmentRepository, times(1)).save(any());
         }

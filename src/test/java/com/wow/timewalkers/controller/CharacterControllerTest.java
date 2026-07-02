@@ -197,23 +197,30 @@ class CharacterControllerTest {
     // -----------------------------------------------------------------------
 
     @Test
-    @DisplayName("PATCH /api/characters/{name}/gear returns 200 on success")
+    @DisplayName("PATCH /api/characters/{name}/gear returns 200 with wrapped equip response")
     void equipGearReturns200() throws Exception {
-        CharacterDTO charDto = emptyCharacterDTO();
-        when(characterService.equipGear(eq("jaraxxus"), any())).thenReturn(charDto);
+        EquipResponseDTO response = new EquipResponseDTO(
+                emptyCharacterDTO(),
+                List.of(EquipmentSlot.HEAD),
+                List.of(new NotFoundSlotDTO(EquipmentSlot.CHEST, "Nonexistent Chest")));
+        when(characterService.equipGear(eq("jaraxxus"), any())).thenReturn(response);
 
         mockMvc.perform(patch("/api/characters/jaraxxus/gear")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "slots": [
-                                    { "slot": "HEAD", "itemName": "Leather Helm" }
+                                    { "slot": "HEAD", "itemName": "Leather Helm" },
+                                    { "slot": "CHEST", "itemName": "Nonexistent Chest" }
                                   ]
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("JARAXXUS"))
-                .andExpect(jsonPath("$.equipment").isArray());
+                .andExpect(jsonPath("$.character.name").value("JARAXXUS"))
+                .andExpect(jsonPath("$.character.equipment").isArray())
+                .andExpect(jsonPath("$.equipped[0]").value("HEAD"))
+                .andExpect(jsonPath("$.notFound[0].slot").value("CHEST"))
+                .andExpect(jsonPath("$.notFound[0].itemName").value("Nonexistent Chest"));
     }
 
     @Test

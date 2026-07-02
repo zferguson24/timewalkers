@@ -471,4 +471,57 @@ class GearValidatorTest {
             assertThat(result).isNotNull().contains("Unknown off-hand item type");
         }
     }
+
+    // -----------------------------------------------------------------------
+    // hasCompatibleStatText — the single interpreter of the free-text stat
+    // convention (see the method comment in GearValidator for the rules)
+    // -----------------------------------------------------------------------
+
+    @Nested
+    @DisplayName("hasCompatibleStatText")
+    class HasCompatibleStatText {
+
+        @Test
+        @DisplayName("Null or blank text is compatible with any stat")
+        void nullOrBlankTextCompatible() {
+            assertThat(validator.hasCompatibleStatText(null, "Agility")).isTrue();
+            assertThat(validator.hasCompatibleStatText("", "Strength")).isTrue();
+            assertThat(validator.hasCompatibleStatText("   ", "Intellect")).isTrue();
+        }
+
+        @Test
+        @DisplayName("Explicit 'No Primary Stat' marker is compatible with any stat")
+        void noPrimaryStatMarkerCompatible() {
+            assertThat(validator.hasCompatibleStatText(
+                    "Haste Crit No Primary Stat", "Agility")).isTrue();
+        }
+
+        @Test
+        @DisplayName("Text without any primary stat keyword is compatible (pure secondary-stat item)")
+        void secondaryStatOnlyCompatible() {
+            assertThat(validator.hasCompatibleStatText("Haste Mastery", "Strength")).isTrue();
+        }
+
+        @Test
+        @DisplayName("Text mentioning the required stat is compatible")
+        void matchingStatCompatible() {
+            assertThat(validator.hasCompatibleStatText("Agility Crit", "Agility")).isTrue();
+            assertThat(validator.hasCompatibleStatText("agility", "Agility")).isTrue();
+            assertThat(validator.hasCompatibleStatText("Strength or Intellect", "Intellect")).isTrue();
+        }
+
+        @Test
+        @DisplayName("Text mentioning only a different primary stat is incompatible")
+        void differentStatIncompatible() {
+            assertThat(validator.hasCompatibleStatText("Strength Haste", "Agility")).isFalse();
+            assertThat(validator.hasCompatibleStatText("Intellect", "Strength")).isFalse();
+        }
+
+        @Test
+        @DisplayName("Comparison is case-insensitive for stat keywords")
+        void caseInsensitiveMatch() {
+            assertThat(validator.hasCompatibleStatText("AGILITY", "Agility")).isTrue();
+            assertThat(validator.hasCompatibleStatText("STRENGTH", "Agility")).isFalse();
+        }
+    }
 }

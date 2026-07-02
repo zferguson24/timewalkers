@@ -99,18 +99,18 @@ public class CharacterService {
         return characterMapper.toCharacterDTO(character, equipment);
     }
 
-    public CharacterDTO equipGear(String name, EquipRequest request) {
+    public EquipResponseDTO equipGear(String name, EquipRequest request) {
         WowCharacter character = findCharacter(name);
         WowClass wowClass = character.getCharacterClass();
         List<EquipSlotRequest> slotRequests = request.slots();
 
         // Step 1: Look up every requested item by exact name (case-insensitive).
-        // Items that exist go into the found maps; items that don't go into notFound.
+        // Items that exist go into the found maps; items that don't go into notFound,
+        // which is returned to the client so a partial apply is visible to the user.
         // Using LinkedHashMap to preserve the order slots were specified in the request.
         Map<EquipmentSlot, ArmorPiece> foundArmor = new LinkedHashMap<>();
         Map<EquipmentSlot, Weapon> foundWeapons = new LinkedHashMap<>();
-        List<EquipmentSlot> notFound = new ArrayList<>();
-        List<String> notFoundNames = new ArrayList<>();
+        List<NotFoundSlotDTO> notFound = new ArrayList<>();
 
         for (EquipSlotRequest sr : slotRequests) {
             EquipmentSlot slot = sr.slot();
@@ -120,17 +120,17 @@ public class CharacterService {
                 armorPieceRepository.findByNameIgnoreCase(sr.itemName())
                         .ifPresentOrElse(
                                 ap -> foundArmor.put(slot, ap),
-                                () -> { notFound.add(slot); notFoundNames.add(sr.itemName()); });
+                                () -> notFound.add(new NotFoundSlotDTO(slot, sr.itemName())));
             } else {
                 weaponRepository.findByNameIgnoreCase(sr.itemName())
                         .ifPresentOrElse(
                                 w -> foundWeapons.put(slot, w),
-                                () -> { notFound.add(slot); notFoundNames.add(sr.itemName()); });
+                                () -> notFound.add(new NotFoundSlotDTO(slot, sr.itemName())));
             }
         }
         log.debug("equipGear [{}] step 1 — {} armor found, {} weapons found, {} items not found{}",
                 name, foundArmor.size(), foundWeapons.size(), notFound.size(),
-                notFoundNames.isEmpty() ? "" : ": " + notFoundNames);
+                notFound.isEmpty() ? "" : ": " + notFound.stream().map(NotFoundSlotDTO::itemName).toList());
 
         // Step 2: Armor type validation — reject the whole request if any found armor
         // item is the wrong type for this character's class (e.g. Plate on a Mage).
@@ -173,7 +173,7 @@ public class CharacterService {
                             .orElse(null);
 
             if (nameA != null && nameA.equalsIgnoreCase(nameB)) {
-                String msg = "\"" + nameA + "\" is already equipped another slot";
+                String msg = "\"" + nameA + "\" is already equipped in another slot";
                 if (aInRequest) uniquenessRejections.add(new RejectedSlotDTO(slotA, msg));
                 if (bInRequest) uniquenessRejections.add(new RejectedSlotDTO(slotB, msg));
             }
@@ -237,8 +237,16 @@ public class CharacterService {
         }
         log.debug("equipGear [{}] step 5 — persisted {} armor, {} weapons", name, foundArmor.size(), foundWeapons.size());
 
+        // Wrapped response: the updated loadout plus which slots were equipped and
+        // which requested items didn't resolve (so the client can surface partial applies).
+        List<EquipmentSlot> equipped = new ArrayList<>(foundArmor.keySet());
+        equipped.addAll(foundWeapons.keySet());
+
         List<CharacterEquipment> allEquipment = equipmentRepository.findByWowCharacter(character);
-        return characterMapper.toCharacterDTO(character, allEquipment);
+        return new EquipResponseDTO(
+                characterMapper.toCharacterDTO(character, allEquipment),
+                equipped,
+                notFound);
     }
 
     public CharacterDTO unequipGear(String name, UnequipRequest request) {
