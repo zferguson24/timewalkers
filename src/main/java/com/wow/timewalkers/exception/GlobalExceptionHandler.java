@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
     }
 
     // Catch-all for any exception not handled above. Logs the full stack trace so
-    // unexpected failures are visible in Railway logs without needing to redeploy with extra instrumentation.
+    // unexpected failures are visible in logs without needing to redeploy with extra instrumentation.
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleUnexpected(Exception ex) {
         log.error("Unhandled exception", ex);

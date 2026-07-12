@@ -16,10 +16,13 @@ jobs:
           java-version: '26'
           distribution: 'temurin'
 
-      - name: Build JAR
+      - name: Run tests
         run: |
           chmod +x mvnw
-          ./mvnw clean package -DskipTests
+          ./mvnw test
+
+      - name: Build JAR
+        run: ./mvnw package -DskipTests
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -30,6 +33,32 @@ jobs:
 
       - name: Upload JAR to S3
         run: aws s3 cp target/timewalkers-0.0.1-SNAPSHOT.jar s3://${{ secrets.DEPLOY_BUCKET }}/timewalkers.jar
+
+      - name: Ensure EC2 instance is running
+        run: |
+          STATE=$(aws ec2 describe-instances \
+            --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
+            --query "Reservations[0].Instances[0].State.Name" --output text)
+          echo "Current instance state: $STATE"
+
+          if [ "$STATE" == "stopped" ]; then
+            echo "Instance is stopped — starting it..."
+            aws ec2 start-instances --instance-ids ${{ secrets.EC2_INSTANCE_ID }}
+            aws ec2 wait instance-running --instance-ids ${{ secrets.EC2_INSTANCE_ID }}
+          fi
+
+          echo "Waiting for SSM Agent to report Online..."
+          for i in $(seq 1 30); do
+            STATUS=$(aws ssm describe-instance-information \
+              --filters "Key=InstanceIds,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+              --query "InstanceInformationList[0].PingStatus" --output text 2>/dev/null)
+            if [ "$STATUS" == "Online" ]; then
+              echo "SSM Agent is online."
+              break
+            fi
+            echo "Waiting for SSM Agent... ($i/30)"
+            sleep 10
+          done
 
       - name: Deploy via SSM
         run: |
