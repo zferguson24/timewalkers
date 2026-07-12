@@ -1,0 +1,754 @@
+openapi: 3.0.1
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+paths:
+  /api/characters:
+    get:
+      tags:
+      - character-controller
+      operationId: getAllCharacters
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CharacterSummaryDTO"
+    post:
+      tags:
+      - character-controller
+      operationId: createCharacter
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCharacterRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CharacterDTO"
+  /api/characters/{name}/gear:
+    delete:
+      tags:
+      - character-controller
+      operationId: unequipGear
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnequipRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CharacterDTO"
+    patch:
+      tags:
+      - character-controller
+      operationId: equipGear
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EquipRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/EquipResponseDTO"
+  /api/gear/weapons:
+    get:
+      tags:
+      - gear-controller
+      operationId: getAllWeapons
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WeaponDTO"
+  /api/gear/weapons/type:
+    get:
+      tags:
+      - gear-controller
+      operationId: getWeaponsByType
+      parameters:
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WeaponDTO"
+  /api/gear/weapons/search:
+    get:
+      tags:
+      - gear-controller
+      operationId: searchWeapons
+      parameters:
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WeaponDTO"
+  /api/gear/search:
+    get:
+      tags:
+      - gear-controller
+      operationId: searchGear
+      parameters:
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/GearSearchResultDTO"
+  /api/gear/expansion:
+    get:
+      tags:
+      - gear-controller
+      operationId: getGearByExpansion
+      parameters:
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ExpansionGearDTO"
+  /api/gear/armor:
+    get:
+      tags:
+      - gear-controller
+      operationId: getAllArmor
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ArmorPieceDTO"
+  /api/gear/armor/type:
+    get:
+      tags:
+      - gear-controller
+      operationId: getArmorByType
+      parameters:
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ArmorPieceDTO"
+  /api/gear/armor/search:
+    get:
+      tags:
+      - gear-controller
+      operationId: searchArmor
+      parameters:
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ArmorPieceDTO"
+  /api/characters/{name}:
+    get:
+      tags:
+      - character-controller
+      operationId: getCharacter
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CharacterDTO"
+  /api/characters/{name}/gear-plan:
+    get:
+      tags:
+      - character-controller
+      operationId: getGearPlan
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: preferredStat
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/GearPlanResponseDTO"
+  /api/characters/creation-info:
+    get:
+      tags:
+      - character-controller
+      operationId: getCreationInfo
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                    - HUMAN
+                    - ORC
+                    - DWARF
+                    - GNOME
+                    - NIGHT_ELF
+                    - DRAENEI
+                    - WORGEN
+                    - VOID_ELF
+                    - LIGHTFORGED_DRAENEI
+                    - KUL_TIRAN
+                    - DARK_IRON_DWARF
+                    - MECHAGNOME
+                    - TROLL
+                    - TAUREN
+                    - UNDEAD
+                    - BLOOD_ELF
+                    - GOBLIN
+                    - NIGHTBORNE
+                    - HIGHMOUNTAIN_TAUREN
+                    - MAGHAR_ORC
+                    - VULPERA
+                    - ZANDALARI_TROLL
+                    - PANDAREN
+                    - DRACTHYR
+                    - EARTHEN
+                    - HARANIR
+components:
+  schemas:
+    CreateCharacterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        race:
+          type: string
+          enum:
+          - HUMAN
+          - ORC
+          - DWARF
+          - GNOME
+          - NIGHT_ELF
+          - DRAENEI
+          - WORGEN
+          - VOID_ELF
+          - LIGHTFORGED_DRAENEI
+          - KUL_TIRAN
+          - DARK_IRON_DWARF
+          - MECHAGNOME
+          - TROLL
+          - TAUREN
+          - UNDEAD
+          - BLOOD_ELF
+          - GOBLIN
+          - NIGHTBORNE
+          - HIGHMOUNTAIN_TAUREN
+          - MAGHAR_ORC
+          - VULPERA
+          - ZANDALARI_TROLL
+          - PANDAREN
+          - DRACTHYR
+          - EARTHEN
+          - HARANIR
+        characterClass:
+          type: string
+          enum:
+          - DEATH_KNIGHT
+          - DEMON_HUNTER
+          - DRUID
+          - EVOKER
+          - HUNTER
+          - MAGE
+          - MONK
+          - PALADIN
+          - PRIEST
+          - ROGUE
+          - SHAMAN
+          - WARLOCK
+          - WARRIOR
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+    CharacterDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        race:
+          type: string
+          enum:
+          - HUMAN
+          - ORC
+          - DWARF
+          - GNOME
+          - NIGHT_ELF
+          - DRAENEI
+          - WORGEN
+          - VOID_ELF
+          - LIGHTFORGED_DRAENEI
+          - KUL_TIRAN
+          - DARK_IRON_DWARF
+          - MECHAGNOME
+          - TROLL
+          - TAUREN
+          - UNDEAD
+          - BLOOD_ELF
+          - GOBLIN
+          - NIGHTBORNE
+          - HIGHMOUNTAIN_TAUREN
+          - MAGHAR_ORC
+          - VULPERA
+          - ZANDALARI_TROLL
+          - PANDAREN
+          - DRACTHYR
+          - EARTHEN
+          - HARANIR
+        characterClass:
+          type: string
+          enum:
+          - DEATH_KNIGHT
+          - DEMON_HUNTER
+          - DRUID
+          - EVOKER
+          - HUNTER
+          - MAGE
+          - MONK
+          - PALADIN
+          - PRIEST
+          - ROGUE
+          - SHAMAN
+          - WARLOCK
+          - WARRIOR
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        equipment:
+          type: array
+          items:
+            $ref: "#/components/schemas/EquippedSlotDTO"
+    EquippedSlotDTO:
+      type: object
+      properties:
+        slot:
+          type: string
+          enum:
+          - HEAD
+          - SHOULDERS
+          - CHEST
+          - WRIST
+          - HANDS
+          - WAIST
+          - LEGS
+          - FEET
+          - NECK
+          - BACK
+          - FINGER_1
+          - FINGER_2
+          - TRINKET_1
+          - TRINKET_2
+          - MAIN_HAND
+          - OFF_HAND
+        equipped:
+          type: boolean
+        item:
+          type: object
+    EquipRequest:
+      type: object
+      properties:
+        slots:
+          type: array
+          items:
+            $ref: "#/components/schemas/EquipSlotRequest"
+    EquipSlotRequest:
+      type: object
+      properties:
+        slot:
+          type: string
+          enum:
+          - HEAD
+          - SHOULDERS
+          - CHEST
+          - WRIST
+          - HANDS
+          - WAIST
+          - LEGS
+          - FEET
+          - NECK
+          - BACK
+          - FINGER_1
+          - FINGER_2
+          - TRINKET_1
+          - TRINKET_2
+          - MAIN_HAND
+          - OFF_HAND
+        itemName:
+          type: string
+    EquipResponseDTO:
+      type: object
+      properties:
+        character:
+          $ref: "#/components/schemas/CharacterDTO"
+        equipped:
+          type: array
+          items:
+            type: string
+            enum:
+            - HEAD
+            - SHOULDERS
+            - CHEST
+            - WRIST
+            - HANDS
+            - WAIST
+            - LEGS
+            - FEET
+            - NECK
+            - BACK
+            - FINGER_1
+            - FINGER_2
+            - TRINKET_1
+            - TRINKET_2
+            - MAIN_HAND
+            - OFF_HAND
+        notFound:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotFoundSlotDTO"
+    NotFoundSlotDTO:
+      type: object
+      properties:
+        slot:
+          type: string
+          enum:
+          - HEAD
+          - SHOULDERS
+          - CHEST
+          - WRIST
+          - HANDS
+          - WAIST
+          - LEGS
+          - FEET
+          - NECK
+          - BACK
+          - FINGER_1
+          - FINGER_2
+          - TRINKET_1
+          - TRINKET_2
+          - MAIN_HAND
+          - OFF_HAND
+        itemName:
+          type: string
+    WeaponDTO:
+      type: object
+      properties:
+        weaponSlot:
+          type: string
+        weaponStat:
+          type: string
+        weaponType:
+          type: string
+        name:
+          type: string
+        expansion:
+          type: string
+        primaryStat:
+          type: string
+        secondaryStat:
+          type: string
+        cost:
+          type: integer
+          format: int32
+        notes:
+          type: string
+        wowheadUrl:
+          type: string
+        iconUrl:
+          type: string
+    ArmorPieceDTO:
+      type: object
+      properties:
+        armorType:
+          type: string
+        slot:
+          type: string
+        name:
+          type: string
+        expansion:
+          type: string
+        primaryStat:
+          type: string
+        secondaryStat:
+          type: string
+        cost:
+          type: integer
+          format: int32
+        notes:
+          type: string
+        wowheadUrl:
+          type: string
+        iconUrl:
+          type: string
+    GearSearchResultDTO:
+      type: object
+      properties:
+        armorPieces:
+          type: array
+          items:
+            $ref: "#/components/schemas/ArmorPieceDTO"
+        weapons:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeaponDTO"
+    ExpansionGearDTO:
+      type: object
+      properties:
+        expansion:
+          type: string
+        armorPieces:
+          type: array
+          items:
+            $ref: "#/components/schemas/ArmorPieceDTO"
+        weapons:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeaponDTO"
+    CharacterSummaryDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        race:
+          type: string
+          enum:
+          - HUMAN
+          - ORC
+          - DWARF
+          - GNOME
+          - NIGHT_ELF
+          - DRAENEI
+          - WORGEN
+          - VOID_ELF
+          - LIGHTFORGED_DRAENEI
+          - KUL_TIRAN
+          - DARK_IRON_DWARF
+          - MECHAGNOME
+          - TROLL
+          - TAUREN
+          - UNDEAD
+          - BLOOD_ELF
+          - GOBLIN
+          - NIGHTBORNE
+          - HIGHMOUNTAIN_TAUREN
+          - MAGHAR_ORC
+          - VULPERA
+          - ZANDALARI_TROLL
+          - PANDAREN
+          - DRACTHYR
+          - EARTHEN
+          - HARANIR
+        characterClass:
+          type: string
+          enum:
+          - DEATH_KNIGHT
+          - DEMON_HUNTER
+          - DRUID
+          - EVOKER
+          - HUNTER
+          - MAGE
+          - MONK
+          - PALADIN
+          - PRIEST
+          - ROGUE
+          - SHAMAN
+          - WARLOCK
+          - WARRIOR
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+    GearPlanEventDTO:
+      type: object
+      properties:
+        expansion:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        slots:
+          type: array
+          items:
+            $ref: "#/components/schemas/GearPlanSlotDTO"
+        cumulativeSlotsFilled:
+          type: integer
+          format: int32
+        turbulentTimeways:
+          type: boolean
+    GearPlanResponseDTO:
+      type: object
+      properties:
+        characterName:
+          type: string
+        resolvedStat:
+          type: string
+        fullyEquipped:
+          type: boolean
+        fullyEquippedDate:
+          type: string
+          format: date
+        alreadyEquippedSlots:
+          type: array
+          items:
+            type: string
+        unresolvableSlots:
+          type: array
+          items:
+            type: string
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/GearPlanEventDTO"
+        statOptions:
+          type: array
+          items:
+            type: string
+    GearPlanSlotDTO:
+      type: object
+      properties:
+        slot:
+          type: string
+        itemName:
+          type: string
+        iconUrl:
+          type: string
+        cost:
+          type: integer
+          format: int32
+    UnequipRequest:
+      type: object
+      properties:
+        slots:
+          type: array
+          items:
+            type: string
+            enum:
+            - HEAD
+            - SHOULDERS
+            - CHEST
+            - WRIST
+            - HANDS
+            - WAIST
+            - LEGS
+            - FEET
+            - NECK
+            - BACK
+            - FINGER_1
+            - FINGER_2
+            - TRINKET_1
+            - TRINKET_2
+            - MAIN_HAND
+            - OFF_HAND

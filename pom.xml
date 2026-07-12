@@ -43,6 +43,14 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Scans @RestController classes at runtime to generate an OpenAPI 3.0 spec.
+             Version pinned against Spring Boot 3.x compatibility — verify against
+             this project's Spring Boot 4.0.7 and adjust if the build fails. -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.7.0</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -50,6 +58,50 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <!-- Boots the app in the background (local profile — no API key
+                         needed, since SecurityConfig doesn't apply under @Profile("!local"))
+                         so springdoc-openapi-maven-plugin can hit its live endpoint below. -->
+                    <execution>
+                        <id>pre-integration-test</id>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                        <configuration>
+                            <profiles>
+                                <profile>local</profile>
+                            </profiles>
+                            <jvmArguments>-DAPI_KEY=local</jvmArguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>post-integration-test</id>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Generates swagger.yaml from the running app's /v3/api-docs.yaml endpoint.
+                 Run with: ./mvnw verify -DskipTests (drop -DskipTests to also re-run unit tests) -->
+            <plugin>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-maven-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <id>generate-openapi-spec</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <apiDocsUrl>http://localhost:8080/v3/api-docs.yaml</apiDocsUrl>
+                    <outputFileName>swagger.yaml</outputFileName>
+                    <outputDir>${project.basedir}</outputDir>
+                </configuration>
             </plugin>
             <!-- JaCoCo generates a code coverage report after tests run.
                  The report lands at target/site/jacoco/index.html. -->
