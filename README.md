@@ -12,11 +12,11 @@ Every endpoint needs an `Authorization: Bearer <key>` header, checked by a custo
 
 ## Hosting
 
-Runs on a single AWS EC2 instance, PostgreSQL included on the same box. No RDS, no managed platform. Cheaper this way for something only I (and a couple friends) use.
+Runs on AWS Lambda as a container image, behind a Function URL, backed by a shared Aurora Serverless v2 database. Both scale to zero when nothing's using it. Used to run on an always-on EC2 box; migrated over since this is only used by me (and a couple friends), and paying for idle compute made no sense.
 
 ## Deploying
 
-Push to `main` and GitHub Actions runs the tests, builds the JAR, and pushes it out via AWS Systems Manager.
+Push to `main` and GitHub Actions runs the tests (as part of the container build), pushes the image to ECR, and updates the Lambda function to use it.
 
 ## Running locally
 

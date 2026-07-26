@@ -12,4 +12,7 @@ FROM public.ecr.aws/docker/library/eclipse-temurin:25-jre
 COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt/extensions/lambda-adapter
 COPY --from=build /build/target/timewalkers-*.jar /app.jar
 ENV PORT=8080
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+# -XX:TieredStopAtLevel=1 skips the C2 JIT tier — its aggressive optimization never pays
+# off in a process that lives for one cold start. -XX:+UseSerialGC trades away
+# multi-threaded GC throughput (irrelevant at this scale) for less startup setup overhead.
+ENTRYPOINT ["java", "-XX:TieredStopAtLevel=1", "-XX:+UseSerialGC", "-jar", "/app.jar"]
